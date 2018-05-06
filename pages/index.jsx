@@ -8,45 +8,46 @@ import css from 'styled-jsx/css'
 import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED, SceneWaitingToStart, SceneLevel, SceneFinished, GAME_LENGTH_IN_SECONDS } from '../game'
 import ScoreDisplay from '../components/ScoreDisplay';
 import { DateTime } from 'luxon'
+import WebcamCapture from '../game/WebcamCapture'
 
 const MODE_WAITING_TO_START = 'WAITING_TO_START'
 const MODE_PLAYING_LEVEL = 'PLAYING_LEVEL'
 const MODE_FINISHED = 'FINISHED'
 
 const _DefaultState = {
-  mode: MODE_WAITING_TO_START,
-  level: null,
-  points: 0,
-  lastInputEmotion: EMOTION_CONTENT,
+    mode: MODE_WAITING_TO_START,
+    level: null,
+    points: 0,
+    lastInputEmotion: EMOTION_CONTENT,
 }
 
 const CSS = css`
 html, body, #__next, .board {
-  height: 100%;
-  font-family: Roboto, sans-serif;
+    height: 100%;
+    font-family: Roboto, sans-serif;
 }
 
 body {
-  background: black;
-  margin: 0;
+    background: black;
+    margin: 0;
 }
 
 .game {
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  top: 5vh;
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    top: 5vh;
 }
 
 .waiting-to-start {
-  margin: auto;
-  top: 50%;
+    margin: auto;
+    top: 50%;
 }
 
 .emoji {
-  display: block;
-  transition: opacity 0.2s linear, transform 0.2s linear;
+    display: block;
+    transition: opacity 0.35s linear, transform 0.2s linear;
 }
 
 ::selection {
@@ -56,170 +57,204 @@ body {
 
 class Game extends React.Component {
 
-  constructor() {
-    super()
+    constructor() {
+        super()
 
-    this.state = _DefaultState
-  }
+        this.state = _DefaultState
+    }
 
-  componentWillMount() {
-    this._interval = setInterval(() => {
-      this.handleGameTick()
-    }, 200)
-  }
+    componentWillMount() {
+    }
 
-  componentWillUnmount() {
-    clearInterval(this._interval)
-  }
+    componentDidMount() {
+        this._gameLoopTimer = setInterval(() => {
+            this.handleGameTick()
+        }, 200)
+    }
 
-  ////////////////////////////////////////////////////////////////////////////
-  // Event handlers
-  ////////////////////////////////////////////////////////////////////////////
+    componentWillUnmount() {
+        clearInterval(this._gameLoopTimer)
+    }
 
-  handleGameTick() {
-      switch (this.state.mode) {
-        case MODE_WAITING_TO_START:
-          break
-        
-        case MODE_PLAYING_LEVEL:
-          const secondsLeftOfLevel = this.state.level.secondsLeftOfLevel - 0.2
-          if (secondsLeftOfLevel < 0) {
-            // Finish game
-            this.setState({
-              mode: MODE_FINISHED,
-              level: null,
-            })
+    ////////////////////////////////////////////////////////////////////////////
+    // Event handlers
+    ////////////////////////////////////////////////////////////////////////////
 
-            // Reset game after 5s
-            setTimeout(() => {
-              this.setState({
-                mode: MODE_WAITING_TO_START
-              })
-            }, 5000)
-          }
-          else {
-            this.setState({
-              level: {
-                ...this.state.level,
-                secondsLeftOfLevel
-              }
-            })
-          }
-          break
+    handleGameTick() {
+            switch (this.state.mode) {
+                case MODE_WAITING_TO_START:
+                    this._startIdleReloadTimer()
+                    break
+                
+                case MODE_PLAYING_LEVEL:
+                    this._clearIdleReloadTimer()
 
-        case MODE_FINISHED:
-          break
-        
-        default:
-          break
-      }
-  }
+                    const secondsLeftOfLevel = this.state.level.secondsLeftOfLevel - 0.2
+                    if (secondsLeftOfLevel < 0) {
+                        // Finish game
+                        this.setState({
+                            mode: MODE_FINISHED,
+                            level: null,
+                        })
 
-  handleInputEmotion(emotion) {
-    switch (this.state.mode) {
-      case MODE_WAITING_TO_START:
-        if (emotion === EMOTION_HAPPY) {
-          this.setState({
-            mode: MODE_PLAYING_LEVEL,
-            points: 0,
-            level: {
-              startedAt: DateTime.local(),
-              secondsLeftOfLevel: GAME_LENGTH_IN_SECONDS,
-              no: 1
+                        // Reset game after 5s
+                        setTimeout(() => {
+                            this.setState({
+                                mode: MODE_WAITING_TO_START
+                            })
+                        }, 10000)
+                    }
+                    else {
+                        this.setState({
+                            level: {
+                                ...this.state.level,
+                                secondsLeftOfLevel
+                            }
+                        })
+                    }
+                    break
+
+                case MODE_FINISHED:
+                    break
+                
+                default:
+                    break
             }
-          })
-        }
-        break
-      
-      case MODE_PLAYING_LEVEL:
-        if (this.state.lastInputEmotion !== emotion) {
-          this.setState({
-            lastInputEmotion: emotion
-          })
-        }
-        break
-      default: break
-    }
-  }
-
-  handleParticleEffect(x, y) {
-    let particleAccelerator = this.refs.particleArea
-    particleAccelerator.createExplosion(x, y)
-  }
-
-  handleLevelComplete() {
-    const nextLevel = this.state.level.no + 1
-    setTimeout(() => {
-      this.setState({
-        level: {
-          ...this.state.level,
-          no: nextLevel
-        }
-      })
-    }, 1000)
-  }
-
-  handleScorePoints(howMany) {
-    this.setState({
-      points: this.state.points + howMany
-    })
-  }
-
-  ////////////////////////////////////////////////////////////////////////////
-  // Render
-  ////////////////////////////////////////////////////////////////////////////
-
-  render() {
-    const {mode, level, lastInputEmotion, points} = this.state
-
-    let main = null
-    let backgroundEffect = null
-    switch (mode) {
-      case MODE_WAITING_TO_START:
-        main = <SceneWaitingToStart />
-        backgroundEffect = 'bubbles'
-        break
-      case MODE_PLAYING_LEVEL:
-        main = <SceneLevel level={level.no}
-                           lastInputEmotion={lastInputEmotion}
-                           onScorePoints={this.handleScorePoints.bind(this)}
-                           onLevelComplete={this.handleLevelComplete.bind(this)}
-                           onParticleEffect={this.handleParticleEffect.bind(this)} />
-        backgroundEffect = 'bubbles'
-        break
-      case MODE_FINISHED:
-        main = <SceneFinished points={this.state.points} />
-        backgroundEffect = 'fireworks'
-        break
-      default: break
     }
 
-    return (
-      <div className="board">
-        <style global jsx>{CSS}</style>
-        
-        <Head>
-          <title>Computas Emoji Game!</title>
-          <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-          <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700,900" rel="stylesheet" />
-          <script src="/static/lib/proton.min.js"/>
-        </Head>
+    handleInputEmotion(emotion) {
+        switch (this.state.mode) {
+            case MODE_WAITING_TO_START:
+                if (emotion === EMOTION_HAPPY) {
+                    this.setState({
+                        mode: MODE_PLAYING_LEVEL,
+                        points: 0,
+                        level: {
+                            startedAt: DateTime.local(),
+                            secondsLeftOfLevel: GAME_LENGTH_IN_SECONDS,
+                            no: 1
+                        },
+                        lastInputEmotion: ''
+                    })
+                    this.refs.particleArea.createExplosion(0, 0)
+                }
+                break
+            
+            case MODE_PLAYING_LEVEL:
+                if (this.state.lastInputEmotion !== emotion) {
+                    this.setState({
+                        lastInputEmotion: emotion
+                    })
+                }
+                break
+            default: break
+        }
+    }
 
-        <LevelProgressBar secondsLeft={level ? level.secondsLeftOfLevel : null}
-                          secondsTotal={GAME_LENGTH_IN_SECONDS}/>
+    handleParticleEffect(x, y) {
+        let particleAccelerator = this.refs.particleArea
+        particleAccelerator.createExplosion(x, y)
+    }
 
-        {level ? <ScoreDisplay score={points}/> : null}
+    handleLevelComplete() {
+        const nextLevel = this.state.level.no + 1
+        setTimeout(() => {
+            this.setState({
+                level: {
+                    ...this.state.level,
+                    no: nextLevel
+                },
+                lastInputEmotion: ''
+            })
+        }, 1000)
+    }
 
-        <div className="game">
-          <ParticleArea ref="particleArea" effect={backgroundEffect} />
+    handleScorePoints(howMany) {
+        this.setState({
+            points: this.state.points + howMany
+        })
+    }
 
-          {main}
-        </div>
+    ////////////////////////////////////////////////////////////////////////////
+    // Render
+    ////////////////////////////////////////////////////////////////////////////
 
-        <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)}/>
-      </div>
-    )
-  }
+    render() {
+        const {mode, level, lastInputEmotion, points} = this.state
+
+        let main = null
+        let backgroundEffect = null
+        switch (mode) {
+            case MODE_WAITING_TO_START:
+                main = <SceneWaitingToStart />
+                backgroundEffect = 'bubbles'
+                break
+
+            case MODE_PLAYING_LEVEL:
+                main = <SceneLevel level={level.no}
+                                   lastInputEmotion={lastInputEmotion}
+                                   onScorePoints={this.handleScorePoints.bind(this)}
+                                   onLevelComplete={this.handleLevelComplete.bind(this)}
+                                   onParticleEffect={this.handleParticleEffect.bind(this)} />
+                backgroundEffect = 'bubbles'
+                break
+
+            case MODE_FINISHED:
+                main = <SceneFinished points={this.state.points} />
+                backgroundEffect = 'fireworks'
+                break
+
+            default: break
+        }
+
+        return (
+            <div className="board">
+                <style global jsx>{CSS}</style>
+                
+                <Head>
+                    <title>Computas Emoji Game!</title>
+                    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
+                    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700,900" rel="stylesheet" />
+                    <script src="/static/lib/proton.min.js"/>
+                </Head>
+
+                <LevelProgressBar secondsLeft={level ? (level.secondsLeftOfLevel || null) : null}
+                                  secondsTotal={GAME_LENGTH_IN_SECONDS}/>
+
+                {level ? <ScoreDisplay score={points}/> : null}
+
+                <div className="game">
+                    <ParticleArea ref="particleArea" effect={backgroundEffect} />
+
+                    {main}
+
+                    <WebcamCapture onInputEmotion={this.handleInputEmotion.bind(this)} />
+                </div>
+
+                <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)}/>
+            </div>
+        )
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Private functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    _startIdleReloadTimer() {
+        // Automatically refresh after 2 minutes of nothing happening, so we keep the tab 'fresh'
+        if (!this._idleReloadTimer) {
+            this._idleReloadTimer = setTimeout(() => {
+                document.location.reload()
+            }, 120000)
+        }
+    }
+
+    _clearIdleReloadTimer() {
+        if (this._idleReloadTimer) {
+            clearInterval(this._idleReloadTimer)
+            this._idleReloadTimer = null
+        }
+    }
 }
 
 export default Game

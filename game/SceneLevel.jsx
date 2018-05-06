@@ -40,7 +40,6 @@ class SceneLevel extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        console.dir('level ' + prevProps.level + ' != ' + this.props.level)
         if (prevProps.level !== this.props.level) {
             this._setLevel(this.props.level)
         }
@@ -104,6 +103,7 @@ class SceneLevel extends React.Component {
         else {
             this._generateEmojis(50)
         }
+
         this.setState({
             ending: false
         })

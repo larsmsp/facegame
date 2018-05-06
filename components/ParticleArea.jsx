@@ -96,6 +96,20 @@ if (process.browser) {
         }
     }
 
+    class ProtonLifeAlpha extends Proton.Behaviour {
+
+        constructor() {
+            super()
+        }
+
+        applyBehaviour(particle, time, index) {
+            this.calculate(particle, time, index);
+            
+            particle.alpha = particle.energy;
+            if (particle.alpha < 0.001) particle.alpha = 0;
+        }
+    }
+
     initializeProton = function(container, canvas) {
         canvas.width = container.clientWidth;
         canvas.height = container.clientHeight;
@@ -135,18 +149,18 @@ if (process.browser) {
         emitter.rate = new Proton.Rate(particleCount, 1);
         emitter.addInitialize(new Proton.Mass(1));
         emitter.addInitialize(new Proton.Radius(3, 7));
-        emitter.addInitialize(new Proton.Life(1, 3));
+        emitter.addInitialize(new Proton.Life(1, 2));
         emitter.addInitialize(new Proton.V(new Proton.Span(5, 8), new Proton.Span(0, 360), 'polar'));
-        
+
         emitter.addBehaviour(new Proton.RandomDrift(10, 10, .05));
-        emitter.addBehaviour(new Proton.Alpha(1, 0));
-        emitter.addBehaviour(new Proton.Gravity(3));
+        emitter.addBehaviour(new ProtonLifeAlpha());
+        emitter.addBehaviour(new Proton.Gravity(5));
         var color = Math.random() > .3 ? Proton.MathUtils.randomColor() : 'random';
         emitter.addBehaviour(new Proton.Color(color));
         
         emitter.p.x = x;
         emitter.p.y = y;
-        emitter.emit('once', true);
+        emitter.emit('once', 5);
     
         return emitter
     }
@@ -159,7 +173,7 @@ if (process.browser) {
 
     function createFireworksEmitter(width, height) {
         let emitter = new Proton.Emitter();
-        emitter.rate = new Proton.Rate(new Proton.Span(2, 3), 0.5);
+        emitter.rate = new Proton.Rate(new Proton.Span(1, 3), 0.8);
         
         emitter.addInitialize(new Proton.Mass(1));
         emitter.addInitialize(new Proton.Radius(3, 7));
@@ -216,7 +230,7 @@ if (process.browser) {
     }
 
     _createExplosion = function(x, y) {
-        _proton.addEmitter(createFireworksExplosionEmitter(x, y, new Proton.Span(100, 120)))
+        _proton.addEmitter(createFireworksExplosionEmitter(x, y, new Proton.Span(50, 80)))
     }
     
     function tick() {
