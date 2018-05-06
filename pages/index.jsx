@@ -31,6 +31,13 @@ body {
     margin: 0;
 }
 
+.banner-logo {
+    position: absolute;
+    right: 1vw;
+    bottom: 1vh;
+    width: 20vw;
+}
+
 .game {
     position: absolute;
     left: 0;
@@ -77,7 +84,6 @@ class Game extends React.Component {
 
     componentWillUnmount() {
         clearInterval(this._gameLoopTimer)
-        document.body.removeEventListener(this._keyDownListener)
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -257,6 +263,8 @@ class Game extends React.Component {
                     <ParticleArea ref="particleArea" effect={backgroundEffect} />
 
                     {main}
+
+                    <img className="banner-logo" src="/static/image/logo-banner.png" />
 
                     <WebcamCapture onInputEmotion={this.handleInputEmotion.bind(this)} />
                 </div>

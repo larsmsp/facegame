@@ -1,5 +1,5 @@
 import React from 'react'
-import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED } from '../game'
+import { ALL_EMOTIONS, ALL_EMOTION_EMOJIS, EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED } from '../game'
 
 class DebugControls extends React.Component
 {
@@ -22,11 +22,11 @@ class DebugControls extends React.Component
     
     handleKeyDown(event) {
         switch (event.key) {
-            case 'a': this.handleClick(EMOTION_CONTENT); break
-            case 's': this.handleClick(EMOTION_HAPPY); break
-            case 'd': this.handleClick(EMOTION_SAD); break
-            case 'f': this.handleClick(EMOTION_SUPRISED); break
-            case 'g': this.handleClick(EMOTION_ANGRY); break
+            case 'a': this.handleClick(ALL_EMOTIONS[0]); break
+            case 's': this.handleClick(ALL_EMOTIONS[1]); break
+            case 'd': this.handleClick(ALL_EMOTIONS[2]); break
+            case 'f': this.handleClick(ALL_EMOTIONS[3]); break
+            case 'g': this.handleClick(ALL_EMOTIONS[4]); break
             default: break
         }
     }
@@ -70,11 +70,9 @@ class DebugControls extends React.Component
                 }
                 `}</style>
                 <div className="button-group">
-                    <button onClick={() => this.handleClick(EMOTION_CONTENT)}>😐</button>
-                    <button onClick={() => this.handleClick(EMOTION_HAPPY)}>😁</button>
-                    <button onClick={() => this.handleClick(EMOTION_SAD)}>😩</button>
-                    <button onClick={() => this.handleClick(EMOTION_SUPRISED)}>😲</button>
-                    <button onClick={() => this.handleClick(EMOTION_ANGRY)}>😠</button>
+                    {ALL_EMOTIONS.map(emotion =>
+                        <button key={emotion} onClick={() => this.handleClick(emotion)}>{ALL_EMOTION_EMOJIS[emotion]}</button>
+                    )}
                 </div>
             </div>
         )

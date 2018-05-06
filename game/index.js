@@ -6,6 +6,13 @@ export const EMOTION_SUPRISED = 'Suprised'
 export const EMOTION_CONTENT = 'Content'
 
 export const ALL_EMOTIONS = [EMOTION_HAPPY, EMOTION_SAD, EMOTION_ANGRY, EMOTION_SUPRISED, EMOTION_CONTENT]
+export const ALL_EMOTION_EMOJIS = {
+    [EMOTION_CONTENT]: '😐',
+    [EMOTION_HAPPY]: '😁',
+    [EMOTION_SAD]: '😩',
+    [EMOTION_SUPRISED]: '😲',
+    [EMOTION_ANGRY]: '😠',
+}
 
 export const GAME_LENGTH_IN_SECONDS = 50
 export const LEVEL_MAX_LENGTH_IN_SECONDS = 10
