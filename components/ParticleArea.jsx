@@ -2,9 +2,25 @@ import React from 'react'
 
 class ParticleArea extends React.Component
 {
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Public functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    createExplosion(x, y) {
+        // Transform coordinate system
+        x = this.refs.container.clientWidth / 2 + x + 20
+        y = this.refs.container.clientHeight / 2 + y + 20
+        _createExplosion(x, y)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Component lifecycle
+    ////////////////////////////////////////////////////////////////////////////
+
     componentDidMount() {
         // Only include client side
-        initializeProton(this.refs.container, this.refs.particles, this.refs.buffer2d);
+        initializeProton(this.refs.container, this.refs.particles);
 
         this._enableEmitter()
     }
@@ -31,33 +47,13 @@ class ParticleArea extends React.Component
         this._enableEmitter()
     }
 
-    _enableEmitter() {
-        switch (this.props.effect) {
-            case 'bubbles':
-                enableEmitter(BUBBLES)
-                break
-            case 'fireworks':
-                enableEmitter(FIREWORKS)
-                break
-            case 'branding':
-                enableEmitter(BRANDING)
-                break
-
-            default:
-                break
-        }
-    }
-
-    createExplosion(x, y) {
-        // Transform coordinate system
-        x = this.refs.container.clientWidth / 2 + x + 20
-        y = this.refs.container.clientHeight / 2 + y + 20
-        _createExplosion(x, y)
-    }
-
     componentWillUnmount() {
         destroy(this.refs.particles)
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // render
+    ////////////////////////////////////////////////////////////////////////////
     
     render() {
         return (
@@ -73,9 +69,29 @@ class ParticleArea extends React.Component
                 }
                 `}</style>
                 <canvas ref="particles"></canvas>
-                <canvas ref="buffer2d"></canvas>
             </div>
         )
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Private functions
+    ////////////////////////////////////////////////////////////////////////////
+
+    _enableEmitter() {
+        switch (this.props.effect) {
+            case 'bubbles':
+                enableEmitter(BUBBLES)
+                break
+            case 'fireworks':
+                enableEmitter(FIREWORKS)
+                break
+            case 'branding':
+                enableEmitter(BRANDING)
+                break
+
+            default:
+                break
+        }
     }
 }
 
@@ -122,24 +138,26 @@ if (process.browser) {
         }
     }
 
-    initializeProton = function(container, canvas3d, canvas2d) {
+    initializeProton = function(container, canvas3d) {
         canvas3d.width = container.clientWidth;
         canvas3d.height = container.clientHeight;
-        
-        canvas2d.width = 1200;
-        canvas2d.height = 500;
-        let ctx = canvas2d.getContext('2d');
 
-        loadBrandingImage(canvas3d, canvas2d, ctx)
+        loadBrandingImage(canvas3d)
 
         createProtonRenderer(canvas3d)
 
         tick()
     }
 
-    function loadBrandingImage(canvas3d, canvas2d, ctx) {
+    function loadBrandingImage(canvas3d) {
         var brandingImage = new Image()
-        brandingImage.onload = (e) => {
+        brandingImage.onload = (e) => {        
+            // Buffer to render the logo mask on
+            const canvas2d = document.createElement('canvas')
+            canvas2d.width = 1200;
+            canvas2d.height = 500;
+            let ctx = canvas2d.getContext('2d');
+
             const rect = new Proton.Rectangle((canvas2d.width - e.target.width) / 2, (canvas2d.height - e.target.height) / 2, e.target.width, e.target.height);
             ctx.drawImage(e.target, rect.x, rect.y);
             const brandingImageData = ctx.getImageData(rect.x, rect.y, rect.width, rect.height);
@@ -183,6 +201,9 @@ if (process.browser) {
                     particle.scale = particle.energy * 3;
                 }
                 particle.radius = particle.oldRadius * particle.scale;
+                if (particle.scale > 3 || particle.oldRadius > 6) {
+                    debugger
+                }
             }
         });
         emitter.addBehaviour(new Proton.RandomDrift(2, 2, .2));

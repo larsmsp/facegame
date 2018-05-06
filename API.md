@@ -38,10 +38,12 @@ Message looks like this:
     {
         "type": "RecognizeImage",
         "tag": "<arbitrary-string>",
+        "captureTime": "2015-01-01T02:03",
         "imageBase64": "<base64 encoded image>"
     }
 
 This will trigger the server to try to recognize faces in the image.
+The client includes the time the image was captured (to measure ping)
 
 The server will perform facial crop first.
 

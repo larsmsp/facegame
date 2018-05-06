@@ -145,13 +145,49 @@ class SceneLevel extends React.Component {
             
             switch (level) {
                 case 1:
-                    node.style.left = (i * 10 - 25) + 'vw'
-                    node.style.top = (-10 +  Math.cos(tx + i / 2) * 30)  + 'vh'
+                    // Wave
+                    node.style.top  = (-11 +  Math.cos(tx + i / 2) * 27) + 'vh'
+                    node.style.left = (i * 10 - 22.5) + 'vw'
                     break
+
                 case 2:
-                default:
+                    // Circle
+                    node.style.top  = (Math.cos(tx + 360 * i / count) * 30 - 10) + 'vh'
                     node.style.left = (Math.sin(tx + 360 * i / count) * 30)  + 'vw'
-                    node.style.top = (-10 + Math.cos(tx + 360 * i / count) * 30)  + 'vh'
+                    break
+                
+                case 3: {
+                    // Sideways wave
+                    const a = (i % 2 == 0) ? Math.sin : Math.cos
+                    node.style.top  = (i * 2.5 - 30) + 'vh'
+                    node.style.left = (a(tx + i / 2) * 30) + 'vw'
+                    break
+                }
+
+                case 4: {
+                    // Rectangle
+                    const col = Math.floor(i % 6)
+                    const row = Math.floor(i / 6)
+
+                    const ox = Math.cos(tx) * 5
+                    const oy = Math.sin(tx) * 5
+
+                    node.style.top  = (row * 10 - 30 + ox) + 'vh'
+                    node.style.left = (col * 10 - 25 + oy) + 'vw'
+                    break
+                }
+
+                case 5: {
+                    // Sideways wave
+                    const a = (i % 2 == 0) ? Math.sin : Math.cos
+                    node.style.top  = (Math.floor(i / 2) * 5 - 30) + 'vh'
+                    node.style.left = (a(tx + i / 2) * 30) + 'vw'
+                    break
+                }
+
+                default:
+                    node.style.top  = (-10 + Math.cos(tx + 360 * i / count) * 30) + 'vh'
+                    node.style.left = (Math.sin(tx + 360 * i / count) * 30)  + 'vw'
                     break
             }
         }
@@ -165,10 +201,10 @@ class SceneLevel extends React.Component {
             this._generateEmojis(5, true)
         }
         else if (levelNo === 2) {
-            this._generateEmojis(10, true)
+            this._generateEmojis(11, true)
         }
         else if (levelNo === 3) {
-            this._generateEmojis(20, true)
+            this._generateEmojis(18 + Math.floor(Math.random() * 5), true)
         }
         else if (levelNo === 4) {
             this._generateEmojis(30, true)
