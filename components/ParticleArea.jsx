@@ -42,8 +42,8 @@ class ParticleArea extends React.Component
 
     createExplosion(x, y) {
         // Transform coordinate system
-        x = (x / 100 + 0.5) * this.refs.container.clientWidth
-        y = (y / 100 + 0.5) * this.refs.container.clientHeight
+        x = this.refs.container.clientWidth / 2 + x + 20
+        y = this.refs.container.clientHeight / 2 + y + 20
         _createExplosion(x, y)
     }
 

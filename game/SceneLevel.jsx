@@ -3,6 +3,7 @@ import Emoji from '../components/Emoji'
 import React from 'react'
 import css from 'styled-jsx/css'
 import { ALL_EMOTIONS, EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED } from '../game'
+import { DateTime } from 'luxon'
 
 const CSS = css`
 .level {
@@ -21,11 +22,21 @@ const CSS = css`
 .level .emoji.dead {
     opacity: 0;
 }
+
+p.help {
+    text-align: center;
+    left: -50vw;
+    position: relative;
+    color: white;
+    font-size: 5vh;
+    top: 20vh;
+}
 `
 
 const _DefaultState = {
     emojis: [],
-    ending: false
+    ending: false,
+    startedAt: null
 }
 
 class SceneLevel extends React.Component {
@@ -44,10 +55,6 @@ class SceneLevel extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (prevProps.level !== this.props.level) {
-            this._setLevel(this.props.level)
-        }
-
         if (this.props.lastInputEmotion !== prevProps.lastInputEmotion) {
             const killCount = this._killAllEmojis(this.props.lastInputEmotion)
             if (killCount > 0) {
@@ -55,13 +62,23 @@ class SceneLevel extends React.Component {
             }
         }
 
-        if (this.state.emojis.filter(e => !e.dead).length === 0 && !this.state.ending) {
-            this.setState({
-                ending: true
-            })
-
-            this.props.onLevelComplete()
+        if (prevProps.level !== this.props.level) {
+            this._setLevel(this.props.level)
         }
+        else {
+
+            if (this.state.emojis.filter(e => !e.dead).length === 0 && !this.state.ending) {
+                this.setState({
+                    ending: true
+                })
+    
+                this.props.onLevelComplete()
+            }
+        }
+    }
+
+    componentWillUnmount() {
+        this._stopAnimating()
     }
     
     ////////////////////////////////////////////////////////////////////////////
@@ -73,20 +90,23 @@ class SceneLevel extends React.Component {
             <Emoji key={i}
                    emotion={e.emotion}
                    dead={e.dead}
-                   style={{
-                        left: e.x + 'vw',
-                        top: e.y + 'vh',
-                    }}
+                   id={'e-' + i}
             />
         )
     }
 
     render () {
+        const {level} = this.props
+
         return (
             <div className="level">
                 <style global jsx>{CSS}</style>
 
                 {this.state.emojis.map(this.renderEmoji.bind(this))}
+
+                {level === 1 ?
+                <p className="help">Make the same face as the Emojis to blow them up!</p>
+                : null}
             </div>
         )
     }
@@ -95,8 +115,51 @@ class SceneLevel extends React.Component {
     // Private methods
     ////////////////////////////////////////////////////////////////////////////
     
+    _startAnimating() {
+        this._stopAnimating()
+        const animate = () => {
+            this._layoutEmojis()
+            this._animationFrame = requestAnimationFrame(animate)
+        }
+
+        this._animationFrame = requestAnimationFrame(animate)
+    }
+
+    _stopAnimating() {
+        if (this._animationFrame) {
+            cancelAnimationFrame(this._animationFrame)
+            this._animationFrame = null
+        }
+    }
+
+    _layoutEmojis() {
+        const {emojis, startedAt} = this.state
+        const {level} = this.props
+
+        const tx = DateTime.local().diff(startedAt).milliseconds / 1000
+        const count = emojis.length
+
+        for (var i = 0; i < count; ++i) {
+            const emoji = emojis[i]
+            const node = document.getElementById('e-' + i)
+            
+            switch (level) {
+                case 1:
+                    node.style.left = (i * 10 - 25) + 'vw'
+                    node.style.top = (-10 +  Math.cos(tx + i / 2) * 30)  + 'vh'
+                    break
+                case 2:
+                default:
+                    node.style.left = (Math.sin(tx + 360 * i / count) * 30)  + 'vw'
+                    node.style.top = (-10 + Math.cos(tx + 360 * i / count) * 30)  + 'vh'
+                    break
+            }
+        }
+    }
+
     _setLevel(levelNo) {
         this._killAllEmojis()
+        console.warn("Setting to level: " + levelNo)
 
         if (levelNo === 1) {
             this._generateEmojis(5, true)
@@ -118,8 +181,11 @@ class SceneLevel extends React.Component {
         }
 
         this.setState({
-            ending: false
+            ending: false,
+            startedAt: DateTime.local()
         })
+        
+        this._startAnimating()
     }
 
     _generateEmojis(count, clearBoard = false) {
@@ -135,9 +201,7 @@ class SceneLevel extends React.Component {
 
     _newEmoji() {
         return {
-            emotion: this._randomEmotion(),
-            x: -30 + Math.random() * 60,
-            y: -30 + Math.random() * 60,
+            emotion: this._randomEmotion()
         }
     }
 
@@ -150,10 +214,10 @@ class SceneLevel extends React.Component {
         }
         else {
             // Kill specific type
-            emojis = emojis.map(e => {
+            emojis = emojis.map((e, emojiIndex) => {
                 if (e.emotion === emotionToKill && !e.dead) {
                     killCount++
-                    return this._killEmoji(e)
+                    return this._killEmoji(e, emojiIndex)
                 }
 
                 return e
@@ -167,9 +231,10 @@ class SceneLevel extends React.Component {
         return killCount
     }
 
-    _killEmoji(emoji) {
+    _killEmoji(emoji, emojiIndex) {
         if (!emoji.dead) {
-            this.props.onParticleEffect(emoji.x, emoji.y)
+            const node = document.getElementById('e-' + emojiIndex)
+            this.props.onParticleEffect(node.offsetLeft, node.offsetTop)
         }
 
         return {

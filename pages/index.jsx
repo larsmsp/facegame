@@ -12,6 +12,7 @@ import WebcamCapture from '../game/WebcamCapture'
 const MODE_WAITING_TO_START = 'WAITING_TO_START'
 const MODE_PLAYING_LEVEL = 'PLAYING_LEVEL'
 const MODE_FINISHED = 'FINISHED'
+const MODE_SHOWING_SCOREBOARD = 'SHOWING_SCOREBOARD'
 
 const _DefaultState = {
     mode: MODE_WAITING_TO_START,
@@ -161,7 +162,9 @@ class Game extends React.Component {
         }
 
         // Run after slight timeout
+        console.warn("Schedule change to level " + nextLevel)
         this._levelCompleteTimer = setTimeout(() => {
+            console.warn("Changing to level " + nextLevel)
             this._levelCompleteTimer = null
             this.setState({
                 level: {
@@ -255,6 +258,7 @@ class Game extends React.Component {
                 </Head>
 
                 <LevelProgressBar secondsLeft={level ? (level.secondsLeftOfGame || null) : null}
+                                  level={level ? level.no : 0}
                                   secondsTotal={GAME_LENGTH_IN_SECONDS}/>
 
                 {level ? <ScoreDisplay score={points}/> : null}

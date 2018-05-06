@@ -39,7 +39,7 @@ p {
 class LevelProgressBar extends React.Component
 {
     render() {
-        const {secondsLeft, secondsTotal} = this.props
+        const {secondsLeft, secondsTotal, level} = this.props
 
         const progress = secondsLeft / secondsTotal * 100
 
@@ -50,7 +50,7 @@ class LevelProgressBar extends React.Component
                 {secondsLeft !== null ?
                     [
                         <div key={1} className="meter" style={{left: '-' + progress + 'vw'}}/>,
-                        <p key={2}>{secondsLeft.toFixed(0)} seconds remaining</p>,
+                        <p key={2}>{secondsLeft.toFixed(0)} seconds remaining, level {level}</p>,
                     ]
                 : null}
             </div>
