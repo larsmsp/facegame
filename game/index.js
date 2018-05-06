@@ -16,7 +16,9 @@ export const ALL_EMOTION_EMOJIS = {
 
 export const GAME_LENGTH_IN_SECONDS = 50
 export const LEVEL_MAX_LENGTH_IN_SECONDS = 10
+export const SCREENSAVE_AFTER_SECONDS = 5
 
 export { default as SceneWaitingToStart } from './SceneWaitingToStart'
 export { default as SceneLevel } from './SceneLevel'
 export { default as SceneFinished } from './SceneFinished'
+export { default as SceneScreensaver } from './SceneScreensaver'

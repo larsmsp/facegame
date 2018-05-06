@@ -4,7 +4,7 @@ class ParticleArea extends React.Component
 {
     componentDidMount() {
         // Only include client side
-        initializeProton(this.refs.container, this.refs.particles);
+        initializeProton(this.refs.container, this.refs.particles, this.refs.buffer2d);
 
         this._enableEmitter()
     }
@@ -20,6 +20,10 @@ class ParticleArea extends React.Component
             case 'fireworks':
                 disableEmitter(FIREWORKS)
                 break
+            case 'branding':
+                disableEmitter(BRANDING)
+                break
+
             default:
                 break
         }
@@ -35,6 +39,10 @@ class ParticleArea extends React.Component
             case 'fireworks':
                 enableEmitter(FIREWORKS)
                 break
+            case 'branding':
+                enableEmitter(BRANDING)
+                break
+
             default:
                 break
         }
@@ -65,6 +73,7 @@ class ParticleArea extends React.Component
                 }
                 `}</style>
                 <canvas ref="particles"></canvas>
+                <canvas ref="buffer2d"></canvas>
             </div>
         )
     }
@@ -72,6 +81,7 @@ class ParticleArea extends React.Component
 
 const BUBBLES = 'BUBBLES'
 const FIREWORKS = 'FIREWORKS'
+const BRANDING = 'BRANDING'
 
 var _allEmitters = {};
 var _proton = null;
@@ -81,6 +91,8 @@ var initializeProton = null;
 var enableEmitter = null;
 var disableEmitter = null;
 var _createExplosion = null; 
+var _brandingImageData = null;
+var _brandingImageRect = null;
 
 if (process.browser) {
     class ProtonTag extends Proton.Initialize {
@@ -110,18 +122,83 @@ if (process.browser) {
         }
     }
 
-    initializeProton = function(container, canvas) {
-        canvas.width = container.clientWidth;
-        canvas.height = container.clientHeight;
-        let ctx = canvas.getContext('webgl', { antialias: true, stencil: false, depth: false, preserveDrawingBuffer: true });
-        ctx.globalCompositeOperation = "darker";
+    initializeProton = function(container, canvas3d, canvas2d) {
+        canvas3d.width = container.clientWidth;
+        canvas3d.height = container.clientHeight;
+        
+        canvas2d.width = 1200;
+        canvas2d.height = 500;
+        let ctx = canvas2d.getContext('2d');
 
-        createProton(canvas);
-        tick();
+        loadBrandingImage(canvas3d, canvas2d, ctx)
+
+        createProtonRenderer(canvas3d)
+
+        tick()
+    }
+
+    function loadBrandingImage(canvas3d, canvas2d, ctx) {
+        var brandingImage = new Image()
+        brandingImage.onload = (e) => {
+            const rect = new Proton.Rectangle((canvas2d.width - e.target.width) / 2, (canvas2d.height - e.target.height) / 2, e.target.width, e.target.height);
+            ctx.drawImage(e.target, rect.x, rect.y);
+            const brandingImageData = ctx.getImageData(rect.x, rect.y, rect.width, rect.height);
+
+            _registerEmitter(BRANDING, createBrandingEmitter(canvas3d, brandingImageData, rect))
+        }
+
+        brandingImage.src = '/static/image/logo-mask.png';
     }
     
     function destroy() {
         _proton.destroy()
+    }
+
+    function createBrandingEmitter(canvas3d, brandingImageData, rect) {
+        let emitter = new Proton.Emitter();
+
+        // Emission rate
+        emitter.rate = new Proton.Rate(new Proton.Span(11, 15), new Proton.Span(.04));
+
+        // initializers
+        emitter.addInitialize(new Proton.Position(new Proton.PointZone(0, 0)));
+        emitter.addInitialize(new Proton.Mass(1));
+        emitter.addInitialize(new Proton.Radius(3, 6));
+        emitter.addInitialize(new Proton.Life(2));
+        emitter.addInitialize(new Proton.P(
+            new Proton.ImageZone(brandingImageData,
+                canvas3d.width / 2 - rect.width / 2, canvas3d.height / 2 - rect.height / 1.5)
+        ));
+        
+        // behaviors
+        emitter.addBehaviour({
+            initialize: particle => {
+                particle.oldRadius = particle.radius;
+                particle.scale = 0;
+            },
+            applyBehaviour: particle => {
+                if (particle.energy >= 2 / 3) {
+                    particle.scale = (1 - particle.energy) * 3;
+                } else if (particle.energy <= 1 / 3) {
+                    particle.scale = particle.energy * 3;
+                }
+                particle.radius = particle.oldRadius * particle.scale;
+            }
+        });
+        emitter.addBehaviour(new Proton.RandomDrift(2, 2, .2));
+        emitter.addBehaviour(new Proton.Color(['#00aeff', '#0044cc', '#1266aa', '#0022ff']));
+        const gravity = new Proton.Gravity(0);
+        emitter.addBehaviour(gravity);
+        
+        return {
+            emitter: emitter,
+            onEnable: proton => {
+                gravity.reset(0);
+            },
+            onDisable: proton => {
+                gravity.reset(1.5);
+            }
+        }
     }
     
     function createBubbleEmitter(width, height) {
@@ -196,18 +273,23 @@ if (process.browser) {
         }
     }
     
-    function createProton(canvas) {
+    function createProtonRenderer(canvas) {
         _proton = new Proton;
         
-        _allEmitters[BUBBLES] = createBubbleEmitter(canvas.width, canvas.height)
-        _allEmitters[FIREWORKS] = createFireworksEmitter(canvas.width, canvas.height)
+        _registerEmitter(BUBBLES, createBubbleEmitter(canvas.width, canvas.height))
+        _registerEmitter(FIREWORKS, createFireworksEmitter(canvas.width, canvas.height))
     
-        let renderer = new Proton.WebGLRenderer(canvas);
+        let renderer = new Proton.WebGLRenderer(canvas)
         renderer.onProtonUpdate = function() {
             this.gl.clearColor(0, 0, 0, 0.2)
             this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT)
-        };
-        _proton.addRenderer(renderer);
+        }
+        _proton.addRenderer(renderer)
+    }
+
+    function _registerEmitter(name, emitter) {
+        _allEmitters[name] = emitter
+        _proton.addEmitter(emitter.emitter);
     }
     
     enableEmitter = function(name) {
@@ -217,13 +299,13 @@ if (process.browser) {
             emitter.onEnable(_proton)
 
         emitter.emitter.emit()
-        _proton.addEmitter(emitter.emitter);
+        // _proton.addEmitter(emitter.emitter);
     }
     
     disableEmitter = function(name) {
         const emitter = _allEmitters[name]
         emitter.emitter.stop()
-        _proton.removeEmitter(emitter.emitter)
+        // _proton.removeEmitter(emitter.emitter)
 
         if (emitter.onDisable)
             emitter.onDisable(_proton)
@@ -234,10 +316,8 @@ if (process.browser) {
     }
     
     function tick() {
-        requestAnimationFrame(tick)
-        
-        
         _proton.update()
+        requestAnimationFrame(tick)
     }
     
 }

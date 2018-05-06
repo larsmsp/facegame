@@ -12,10 +12,10 @@ const CSS = css`
 }
 
 h1 {
-    font-size: 5vh;
+    font-size: 9vh;
     color: white;
     margin: 0;
-    margin-bottom: 15vh;
+    margin-bottom: 10vh;
     margin-top: 3vh;
 }
 
@@ -55,7 +55,7 @@ class SceneWaitingToStart extends React.Component {
             <div className="waiting-to-start">
                 <style jsx>{CSS}</style>
 
-                <h1>Crazy Emoji Game</h1>
+                <h1>Hello!</h1>
 
                 <Emoji emotion={EMOTION_HAPPY} style={{
                 }}/>

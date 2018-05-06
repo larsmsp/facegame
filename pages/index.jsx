@@ -4,11 +4,12 @@ import LevelProgressBar from '../components/LevelProgressBar'
 import React from 'react'
 import Head from 'next/head'
 import css from 'styled-jsx/css'
-import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED, SceneWaitingToStart, SceneLevel, SceneFinished, GAME_LENGTH_IN_SECONDS, LEVEL_MAX_LENGTH_IN_SECONDS } from '../game'
+import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED, SceneScreensaver, SceneWaitingToStart, SceneLevel, SceneFinished, GAME_LENGTH_IN_SECONDS, LEVEL_MAX_LENGTH_IN_SECONDS, SCREENSAVE_AFTER_SECONDS } from '../game'
 import ScoreDisplay from '../components/ScoreDisplay';
 import { DateTime } from 'luxon'
 import WebcamCapture from '../game/WebcamCapture'
 
+const MODE_SCREENSAVER = 'MODE_SCREENSAVER'
 const MODE_WAITING_TO_START = 'WAITING_TO_START'
 const MODE_PLAYING_LEVEL = 'PLAYING_LEVEL'
 const MODE_FINISHED = 'FINISHED'
@@ -19,6 +20,7 @@ const _DefaultState = {
     level: null,
     points: 0,
     lastInputEmotion: EMOTION_CONTENT,
+    lastInputAt: DateTime.local()
 }
 
 const CSS = css`
@@ -36,7 +38,7 @@ body {
     position: absolute;
     right: 1vw;
     bottom: 1vh;
-    width: 20vw;
+    width: 12vw;
 }
 
 .game {
@@ -93,8 +95,20 @@ class Game extends React.Component {
 
     handleGameTick() {
             switch (this.state.mode) {
+                case MODE_SCREENSAVER:
+                    this._startIdleReloadTimer()
+                    break
+
                 case MODE_WAITING_TO_START:
                     this._startIdleReloadTimer()
+
+                    const secondsSinceLastInput = DateTime.local().diff(this.state.lastInputAt).milliseconds
+                    if (secondsSinceLastInput > SCREENSAVE_AFTER_SECONDS * 1000) {
+                        // Go to screensaver
+                        this.setState({
+                            mode: MODE_SCREENSAVER
+                        })
+                    }
                     break
                 
                 case MODE_PLAYING_LEVEL:
@@ -131,7 +145,17 @@ class Game extends React.Component {
     }
 
     handleInputEmotion(emotion) {
+        this.setState({
+            lastInputAt: DateTime.local()
+        })
+
         switch (this.state.mode) {
+            case MODE_SCREENSAVER:
+                this.setState({
+                    mode: MODE_WAITING_TO_START
+                })
+                break
+
             case MODE_WAITING_TO_START:
                 if (emotion === EMOTION_HAPPY) {
                     this.handleStartGame()
@@ -162,9 +186,7 @@ class Game extends React.Component {
         }
 
         // Run after slight timeout
-        console.warn("Schedule change to level " + nextLevel)
         this._levelCompleteTimer = setTimeout(() => {
-            console.warn("Changing to level " + nextLevel)
             this._levelCompleteTimer = null
             this.setState({
                 level: {
@@ -198,6 +220,8 @@ class Game extends React.Component {
         this.setState({
             mode: MODE_FINISHED,
             level: null,
+            // Make it so outro is not interrupted immdiately by screensaver
+            lastInputAt: DateTime.local().add({ seconds: 10 })
         })
 
         // Reset game after 5s
@@ -224,6 +248,11 @@ class Game extends React.Component {
         let main = null
         let backgroundEffect = null
         switch (mode) {
+            case MODE_SCREENSAVER:
+                main = <SceneScreensaver />
+                backgroundEffect = 'branding'
+                break
+
             case MODE_WAITING_TO_START:
                 main = <SceneWaitingToStart />
                 backgroundEffect = 'bubbles'
@@ -235,7 +264,7 @@ class Game extends React.Component {
                                    onScorePoints={this.handleScorePoints.bind(this)}
                                    onLevelComplete={this.handleLevelComplete.bind(this)}
                                    onParticleEffect={this.handleParticleEffect.bind(this)} />
-                backgroundEffect = 'bubbles'
+                backgroundEffect =  level.no === 2 ? 'branding' : 'bubbles'
                 break
 
             case MODE_FINISHED:
