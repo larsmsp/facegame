@@ -73,7 +73,7 @@ from the local camera in a `StartCamera` session.
 * **captureTime** is the time the image was captured by the server (if **StartCamera**) or the time it was received from the client (if **RecognizeImage**).
 * **faces** is an array of dictionaries containing the cropped faces from the image.
 
-## RecognizitionResult
+## RecognitionResult
 
 Server sends this once it has received a response from the cloud.
 
