@@ -230,7 +230,7 @@ if (process.browser) {
     }
 
     _createExplosion = function(x, y) {
-        _proton.addEmitter(createFireworksExplosionEmitter(x, y, new Proton.Span(50, 80)))
+        _proton.addEmitter(createFireworksExplosionEmitter(x, y, new Proton.Span(30, 40)))
     }
     
     function tick() {

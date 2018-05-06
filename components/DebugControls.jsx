@@ -3,13 +3,42 @@ import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUP
 
 class DebugControls extends React.Component
 {
+    ////////////////////////////////////////////////////////////////////////////
+    // Component lifecycle
+    ////////////////////////////////////////////////////////////////////////////
+    
+    componentDidMount() {
+        this._keyDownListener = this.handleKeyDown.bind(this)
+        document.body.addEventListener('keydown', this._keyDownListener)
+    }
+
+    componentWillUnmount() {
+        document.body.removeEventListener(this._keyDownListener)        
+    }
+    
+    ////////////////////////////////////////////////////////////////////////////
+    // Event handlers
+    ////////////////////////////////////////////////////////////////////////////
+    
+    handleKeyDown(event) {
+        switch (event.key) {
+            case 'a': this.handleClick(EMOTION_CONTENT); break
+            case 's': this.handleClick(EMOTION_HAPPY); break
+            case 'd': this.handleClick(EMOTION_SAD); break
+            case 'f': this.handleClick(EMOTION_SUPRISED); break
+            case 'g': this.handleClick(EMOTION_ANGRY); break
+            default: break
+        }
+    }
+
     handleClick(emotion) {
         this.props.onInputEmotion(emotion)
     }
 
-    componentDidMount() {
-    }
-    
+    ////////////////////////////////////////////////////////////////////////////
+    // Render
+    ////////////////////////////////////////////////////////////////////////////
+
     render() {
         return (
             <div className="panel">

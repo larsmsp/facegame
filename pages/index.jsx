@@ -77,6 +77,7 @@ class Game extends React.Component {
 
     componentWillUnmount() {
         clearInterval(this._gameLoopTimer)
+        document.body.removeEventListener(this._keyDownListener)
     }
 
     ////////////////////////////////////////////////////////////////////////////
