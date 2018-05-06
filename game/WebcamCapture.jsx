@@ -1,9 +1,12 @@
 import Emoji from '../components/Emoji'
+import DebugControls from '../components/DebugControls'
 import React from 'react'
 import css from 'styled-jsx/css'
 import { EMOTION_CONTENT } from '.';
 
-const _DefaultState = {}
+const _DefaultState = {
+    detectedEmotion: ''
+}
 
 const CSS = css`
 .video-area video {
@@ -30,6 +33,10 @@ class WebcamStream extends React.Component {
 
         this.state = _DefaultState
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Component lifecycle
+    ////////////////////////////////////////////////////////////////////////////
 
     componentDidMount() {
         const { videoElement } = this.refs
@@ -77,16 +84,33 @@ class WebcamStream extends React.Component {
     
     
         navigator.getUserMedia({ "video": true }, _startWebcam, error => {
-            alert("Video capture error: ", error.code)
+            alert("You must grant video access for the game to work.\n\n" + error.code)
         })
     }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Event handlers
+    ////////////////////////////////////////////////////////////////////////////
+
+    handleInputEmotion(emotion) {
+        this.setState({
+            detectedEmotion: emotion
+        })
+        this.props.onInputEmotion(emotion)
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Render
+    ////////////////////////////////////////////////////////////////////////////
 
     render() {
         return (
             <div className="video-area">
                 <style global jsx>{CSS}</style>
                 <video ref="videoElement" />
-                <Emoji emotion={EMOTION_CONTENT} />
+                <Emoji emotion={this.state.detectedEmotion} />
+
+                <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)}/>
             </div>
         )
     }

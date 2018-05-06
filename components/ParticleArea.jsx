@@ -167,7 +167,7 @@ if (process.browser) {
     
     function onParticleDeadMakeFireworks(particle) {
         if (particle.tag === 'firework') {
-            _proton.addEmitter(createFireworksExplosionEmitter(particle.p.x, particle.p.y, new Proton.Span(250, 300)))
+            _proton.addEmitter(createFireworksExplosionEmitter(particle.p.x, particle.p.y, new Proton.Span(150, 200)))
         }
     }
 

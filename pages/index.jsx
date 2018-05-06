@@ -1,11 +1,10 @@
 import ParticleArea from '../components/ParticleArea'
-import DebugControls from '../components/DebugControls'
 import Emoji from '../components/Emoji'
 import LevelProgressBar from '../components/LevelProgressBar'
 import React from 'react'
 import Head from 'next/head'
 import css from 'styled-jsx/css'
-import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED, SceneWaitingToStart, SceneLevel, SceneFinished, GAME_LENGTH_IN_SECONDS } from '../game'
+import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED, SceneWaitingToStart, SceneLevel, SceneFinished, GAME_LENGTH_IN_SECONDS, LEVEL_MAX_LENGTH_IN_SECONDS } from '../game'
 import ScoreDisplay from '../components/ScoreDisplay';
 import { DateTime } from 'luxon'
 import WebcamCapture from '../game/WebcamCapture'
@@ -63,6 +62,10 @@ class Game extends React.Component {
         this.state = _DefaultState
     }
 
+    ////////////////////////////////////////////////////////////////////////////
+    // Component lifecycle
+    ////////////////////////////////////////////////////////////////////////////
+
     componentWillMount() {
     }
 
@@ -89,25 +92,22 @@ class Game extends React.Component {
                 case MODE_PLAYING_LEVEL:
                     this._clearIdleReloadTimer()
 
+                    const secondsLeftOfGame = this.state.level.secondsLeftOfGame - 0.2
                     const secondsLeftOfLevel = this.state.level.secondsLeftOfLevel - 0.2
-                    if (secondsLeftOfLevel < 0) {
-                        // Finish game
-                        this.setState({
-                            mode: MODE_FINISHED,
-                            level: null,
-                        })
 
-                        // Reset game after 5s
-                        setTimeout(() => {
-                            this.setState({
-                                mode: MODE_WAITING_TO_START
-                            })
-                        }, 10000)
+                    if (secondsLeftOfLevel < 0) {
+                        this.handleLevelComplete()
+                        break
+                    }
+
+                    if (secondsLeftOfGame < 0) {
+                        this.handleEndGame()
                     }
                     else {
                         this.setState({
                             level: {
                                 ...this.state.level,
+                                secondsLeftOfGame,
                                 secondsLeftOfLevel
                             }
                         })
@@ -126,17 +126,7 @@ class Game extends React.Component {
         switch (this.state.mode) {
             case MODE_WAITING_TO_START:
                 if (emotion === EMOTION_HAPPY) {
-                    this.setState({
-                        mode: MODE_PLAYING_LEVEL,
-                        points: 0,
-                        level: {
-                            startedAt: DateTime.local(),
-                            secondsLeftOfLevel: GAME_LENGTH_IN_SECONDS,
-                            no: 1
-                        },
-                        lastInputEmotion: ''
-                    })
-                    this.refs.particleArea.createExplosion(0, 0)
+                    this.handleStartGame()
                 }
                 break
             
@@ -158,15 +148,54 @@ class Game extends React.Component {
 
     handleLevelComplete() {
         const nextLevel = this.state.level.no + 1
-        setTimeout(() => {
+        
+        if (this._levelCompleteTimer) {
+            return
+        }
+
+        // Run after slight timeout
+        this._levelCompleteTimer = setTimeout(() => {
+            this._levelCompleteTimer = null
             this.setState({
                 level: {
                     ...this.state.level,
-                    no: nextLevel
+                    no: nextLevel,
+                    secondsLeftOfLevel: LEVEL_MAX_LENGTH_IN_SECONDS,
                 },
+                // Reset input when new level starts
                 lastInputEmotion: ''
             })
-        }, 1000)
+        }, 100)
+    }
+
+    handleStartGame() {
+        this.setState({
+            mode: MODE_PLAYING_LEVEL,
+            points: 0,
+            level: {
+                startedAt: DateTime.local(),
+                secondsLeftOfGame: GAME_LENGTH_IN_SECONDS,
+                secondsLeftOfLevel: LEVEL_MAX_LENGTH_IN_SECONDS,
+                no: 1
+            },
+            lastInputEmotion: ''
+        })
+        this.refs.particleArea.createExplosion(0, 0)
+    }
+
+    handleEndGame() {
+        // Finish game
+        this.setState({
+            mode: MODE_FINISHED,
+            level: null,
+        })
+
+        // Reset game after 5s
+        setTimeout(() => {
+            this.setState({
+                mode: MODE_WAITING_TO_START
+            })
+        }, 10000)
     }
 
     handleScorePoints(howMany) {
@@ -218,7 +247,7 @@ class Game extends React.Component {
                     <script src="/static/lib/proton.min.js"/>
                 </Head>
 
-                <LevelProgressBar secondsLeft={level ? (level.secondsLeftOfLevel || null) : null}
+                <LevelProgressBar secondsLeft={level ? (level.secondsLeftOfGame || null) : null}
                                   secondsTotal={GAME_LENGTH_IN_SECONDS}/>
 
                 {level ? <ScoreDisplay score={points}/> : null}
@@ -230,8 +259,6 @@ class Game extends React.Component {
 
                     <WebcamCapture onInputEmotion={this.handleInputEmotion.bind(this)} />
                 </div>
-
-                <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)}/>
             </div>
         )
     }

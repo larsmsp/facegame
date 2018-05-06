@@ -85,23 +85,24 @@ class SceneLevel extends React.Component {
 
     _setLevel(levelNo) {
         this._killAllEmojis()
+
         if (levelNo === 1) {
-            this._generateEmojis(5)
+            this._generateEmojis(5, true)
         }
         else if (levelNo === 2) {
-            this._generateEmojis(10)
+            this._generateEmojis(10, true)
         }
         else if (levelNo === 3) {
-            this._generateEmojis(20)
+            this._generateEmojis(20, true)
         }
         else if (levelNo === 4) {
-            this._generateEmojis(30)
+            this._generateEmojis(30, true)
         }
         else if (levelNo === 5) {
-            this._generateEmojis(40)
+            this._generateEmojis(40, true)
         }
         else {
-            this._generateEmojis(50)
+            this._generateEmojis(50, true)
         }
 
         this.setState({
@@ -109,8 +110,8 @@ class SceneLevel extends React.Component {
         })
     }
 
-    _generateEmojis(count) {
-        let emojis = [...this.state.emojis]
+    _generateEmojis(count, clearBoard = false) {
+        let emojis = clearBoard ? [] : [...this.state.emojis]
         for (var i = 0; i < count; ++i) {
             emojis.push(this._newEmoji())
         }
