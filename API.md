@@ -70,7 +70,7 @@ from the local camera in a `StartCamera` session.
     }
 
 * **tag** will be the same string as sent to `RecognizeImage`/`StartCamera`, client uses this to match the captured image to the response.
-* **captureTime** is the time the image was captured by the server (if **StartCamera**) or the time it was received from the client (if **RecognizeImage**).
+* **captureTime** is the time the image was captured by the server (if `StartCamera`) or the time it was received from the client (if `RecognizeImage`).
 * **faces** is an array of dictionaries containing the cropped faces from the image.
 
 ## RecognitionResult
@@ -97,7 +97,7 @@ Server sends this once it has received a response from the cloud.
     }
 
 * **tag** will be the same string as sent to `RecognizeImage`/`StartCamera`, client uses this to match the captured image to the response.
-* **captureTime** is the time the image was captured by the server (if **StartCamera**) or the time it was received from the client (if **RecognizeImage**).
+* **captureTime** is the time the image was captured by the server (if `StartCamera`) or the time it was received from the client (if `RecognizeImage`).
 * **faces** is an array of dictionaries containing information about the recognized faces. Client uses the emotion array to figure out the primary emotion.
 * **faceAttributes** Is a raw dictionary with the from the cloud API. It's content is dependant on if Azure or Google is used.
 
