@@ -22,7 +22,7 @@ const CSS = css`
 }
 
 .score-display strong {
-    font-weight: 800;
+    font-weight: 900;
 }
 
 .score-display small {
@@ -37,7 +37,7 @@ const CSS = css`
 
 .latest-scores li {
     list-style-type: none;
-    font-weight: 800;
+    font-weight: 900;
     opacity: 0;
 }
 

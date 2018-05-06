@@ -13,25 +13,29 @@ import ScoreDisplay from '../components/ScoreDisplay';
 import { DateTime } from 'luxon'
 import WebcamCapture from './WebcamCapture'
 
-const MODE_SCREENSAVER = 'MODE_SCREENSAVER'
+const MODE_LOADING = 'LOADING'
+const MODE_SCREENSAVER = 'SCREENSAVER'
 const MODE_WAITING_TO_START = 'WAITING_TO_START'
 const MODE_PLAYING_LEVEL = 'PLAYING_LEVEL'
 const MODE_FINISHED = 'FINISHED'
 const MODE_SHOWING_SCOREBOARD = 'SHOWING_SCOREBOARD'
 
 const _DefaultState = {
-    mode: MODE_WAITING_TO_START,
+    mode: MODE_LOADING,
     level: null,
     points: 0,
+    playerImageUrl: null,
     lastInputEmotion: EMOTION_CONTENT,
-    lastInputAt: DateTime.local()
+    lastInputAt: DateTime.local(),
+    cameraReady: false,
+    particlesReady: true,
 }
 
 const CSS = css`
 .banner-logo {
     position: absolute;
     right: 1vw;
-    bottom: 1vh;
+    bottom: 2vh;
     width: 12vw;
 }
 
@@ -41,6 +45,11 @@ const CSS = css`
     right: 0;
     bottom: 0;
     top: 5vh;
+}
+
+.game h1 {
+    color: white;
+    text-align: center;
 }
 
 .waiting-to-start {
@@ -71,6 +80,14 @@ class Game extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     componentWillMount() {
+    }
+
+    componentWillUpdate(nextProps, nextState) {
+        if (nextState.cameraReady && nextState.particlesReady && this.state.mode === MODE_LOADING) {
+            this.setState({
+                mode: MODE_WAITING_TO_START
+            })
+        }
     }
 
     componentDidMount() {
@@ -139,9 +156,9 @@ class Game extends React.Component {
             }
     }
 
-    handleInputEmotion(emotion) {
+    handleInputEmotion(emotion, mugshot) {
         this.setState({
-            lastInputAt: DateTime.local()
+            lastInputAt: DateTime.local(),
         })
 
         switch (this.state.mode) {
@@ -153,7 +170,7 @@ class Game extends React.Component {
 
             case MODE_WAITING_TO_START:
                 if (emotion === EMOTION_HAPPY) {
-                    this.handleStartGame()
+                    this.handleStartGame(mugshot)
                 }
                 break
             
@@ -166,6 +183,12 @@ class Game extends React.Component {
                 break
             default: break
         }
+    }
+
+    handleCameraReady() {
+        this.setState({
+            cameraReady: true
+        })
     }
 
     handleParticleEffect(x, y) {
@@ -195,19 +218,21 @@ class Game extends React.Component {
         }, 100)
     }
 
-    handleStartGame() {
+    handleStartGame(mugshot) {
+        this.refs.particleArea.createExplosion(0, 0)
+
         this.setState({
             mode: MODE_PLAYING_LEVEL,
             points: 0,
+            playerImageUrl: mugshot,
             level: {
                 startedAt: DateTime.local(),
                 secondsLeftOfGame: GAME_LENGTH_IN_SECONDS,
                 secondsLeftOfLevel: LEVEL_MAX_LENGTH_IN_SECONDS,
                 no: 1
             },
-            lastInputEmotion: ''
+            lastInputEmotion: '',
         })
-        this.refs.particleArea.createExplosion(0, 0)
     }
 
     handleEndGame() {
@@ -216,13 +241,14 @@ class Game extends React.Component {
             mode: MODE_FINISHED,
             level: null,
             // Make it so outro is not interrupted immdiately by screensaver
-            lastInputAt: DateTime.local().plus({ seconds: 10 })
+            lastInputAt: DateTime.local().plus({ seconds: 10 }),
         })
 
         // Reset game after 5s
         setTimeout(() => {
             this.setState({
-                mode: MODE_WAITING_TO_START
+                mode: MODE_WAITING_TO_START,
+                playerImageUrl: null,
             })
         }, CONGRATS_SCREEN_SHOWN_FOR_SECONDS * 1000)
     }
@@ -238,11 +264,15 @@ class Game extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     render() {
-        const {mode, level, lastInputEmotion, points} = this.state
+        const {cameraReady, particlesReady, playerImageUrl, mode, level, lastInputEmotion, points} = this.state
 
         let main = null
         let backgroundEffect = null
         switch (mode) {
+            case MODE_LOADING:
+                main = <h1>Loading ...</h1>
+                break
+
             case MODE_SCREENSAVER:
                 main = <SceneScreensaver />
                 backgroundEffect = 'branding'
@@ -263,7 +293,8 @@ class Game extends React.Component {
                 break
 
             case MODE_FINISHED:
-                main = <SceneFinished points={this.state.points} />
+                main = <SceneFinished points={this.state.points}
+                                      playerImageUrl={playerImageUrl}/>
                 backgroundEffect = 'fireworks'
                 break
 
@@ -288,13 +319,19 @@ class Game extends React.Component {
                 {level ? <ScoreDisplay score={points}/> : null}
 
                 <div className="game">
-                    <ParticleArea ref="particleArea" effect={backgroundEffect} />
+                    {particlesReady ?
+                        <ParticleArea ref="particleArea" effect={backgroundEffect} />
+                    : null}
 
                     {main}
 
-                    <img className="banner-logo" src="/static/image/logo-banner.png" />
+                    {mode === MODE_FINISHED || mode === MODE_PLAYING_LEVEL ?
+                        <img className="banner-logo" src="/static/image/logo-banner.png" />
+                    : null}
 
-                    <WebcamCapture onInputEmotion={this.handleInputEmotion.bind(this)} />
+                    <WebcamCapture ref="camera"
+                                   onInputEmotion={this.handleInputEmotion.bind(this)} 
+                                   onCameraReady={this.handleCameraReady.bind(this)}/>
                 </div>
             </div>
         )
