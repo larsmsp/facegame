@@ -20,6 +20,8 @@ const MODE_PLAYING_LEVEL = 'PLAYING_LEVEL'
 const MODE_FINISHED = 'FINISHED'
 const MODE_SHOWING_SCOREBOARD = 'SHOWING_SCOREBOARD'
 
+const LOCAL_STORAGE_RESUME_KEY = 'resume-at-screensaver'
+
 const _DefaultState = {
     mode: MODE_LOADING,
     level: null,
@@ -83,9 +85,17 @@ class Game extends React.Component {
     }
 
     componentWillUpdate(nextProps, nextState) {
-        if (nextState.cameraReady && nextState.particlesReady && this.state.mode === MODE_LOADING) {
+        if (nextState.cameraReady && nextState.particlesReady && this.state.mode === MODE_LOADING && nextState.mode === MODE_LOADING) {
+            let nextMode = MODE_WAITING_TO_START
+
+            // Resume at screensaver if key is set
+            if (window.localStorage.getItem(LOCAL_STORAGE_RESUME_KEY) === 'true') {
+                nextMode = MODE_SCREENSAVER
+                window.localStorage.setItem(LOCAL_STORAGE_RESUME_KEY, 'false')
+            }
+
             this.setState({
-                mode: MODE_WAITING_TO_START
+                mode: nextMode
             })
         }
     }
@@ -109,6 +119,7 @@ class Game extends React.Component {
                 case MODE_SCREENSAVER: {
                     const secondsSinceLastInput = DateTime.local().diff(this.state.lastInputAt).milliseconds
                     if (secondsSinceLastInput > RELOAD_AFTER_SECONDS * 1000) {
+                        window.localStorage.setItem(LOCAL_STORAGE_RESUME_KEY, 'true')
                         document.location.reload()
                     }
                     break
@@ -264,6 +275,7 @@ class Game extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     render() {
+        const {debug} = this.props
         const {cameraReady, particlesReady, playerImageUrl, mode, level, lastInputEmotion, points} = this.state
 
         let main = null
@@ -330,6 +342,7 @@ class Game extends React.Component {
                     : null}
 
                     <WebcamCapture ref="camera"
+                                   debug={debug}
                                    onInputEmotion={this.handleInputEmotion.bind(this)} 
                                    onCameraReady={this.handleCameraReady.bind(this)}/>
                 </div>

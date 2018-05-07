@@ -1,7 +1,7 @@
 import React from 'react'
 import { WebApp } from '../game'
 
-class IndexPage extends React.Component {
+class DebugPage extends React.Component {
 
     ////////////////////////////////////////////////////////////////////////////
     // Component lifecycle
@@ -13,7 +13,7 @@ class IndexPage extends React.Component {
 
     render() {
         return (
-            <WebApp debug={false} />
+            <WebApp debug={true} />
         )
     }
 
@@ -22,4 +22,4 @@ class IndexPage extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 }
 
-export default IndexPage
+export default DebugPage

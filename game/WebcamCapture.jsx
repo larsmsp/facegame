@@ -60,7 +60,6 @@ class WebcamStream extends React.Component {
     componentDidMount() {
         const { videoElement, captureCanvas } = this.refs
 
-
         let _startWebcam = stream => {
             videoElement.srcObject = stream
             videoElement.play().then(() => {
@@ -127,8 +126,7 @@ class WebcamStream extends React.Component {
 
     render() {
         const {detectedEmotion, lastCapturedImageUrl, videoHeight, videoWidth} = this.state
-        const debug = false
-        
+        const {debug} = this.props
         return (
             <div className="video-area">
                 <style global jsx>{CSS}</style>
@@ -136,14 +134,16 @@ class WebcamStream extends React.Component {
                 <Emoji emotion={detectedEmotion} />
 
                 <canvas ref="captureCanvas" />
-                {debug ?
+                {debug && false ?
                     <img className="last-capture"
                         src={lastCapturedImageUrl}
                         style={{width: videoWidth + 'px', height: videoHeight + 'px'}}
                     />
                 : null}
 
-                <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)}/>
+                {debug ?
+                    <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)}/>
+                : null}
             </div>
         )
     }
