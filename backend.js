@@ -1,4 +1,6 @@
 const WebSocket = require("ws");
+const fs = require("fs");
+const imageDataURI = require("image-data-uri");
 
 const PORT = 4001;
 
@@ -28,7 +30,19 @@ const wss = new WebSocket.Server({
 
 wss.on("connection", function connection(ws) {
     ws.on("message", function incoming(message) {
-        console.log("received: %s", message);
+        const packet = JSON.parse(message);
+
+        switch (packet.type) {
+            case "RecognizeImage":
+                console.log(`RecognizeImage - ${packet.imageBase64.length} bytes`);
+                const image = imageDataURI.decode(packet.imageBase64);
+
+                imageDataURI.outputFile(packet.imageBase64, "tmp-captures/faceimage-" + new Date().getTime() + ".jpg");
+                break;
+
+            default:
+                console.error(`Unknown packet type: ${packet.type}`);
+        }
     });
 
     ws.send("something");

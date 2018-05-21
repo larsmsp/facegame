@@ -5,6 +5,7 @@
         "start": "next start"
     },
     "dependencies": {
+        "image-data-uri": "^1.1.1",
         "luxon": "^1.2.0",
         "next": "^6.0.0",
         "react": "^16.3.2",

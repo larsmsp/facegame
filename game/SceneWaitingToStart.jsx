@@ -6,7 +6,7 @@ import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUP
 const CSS = css`
     .waiting-to-start {
         margin-top: 0vh;
-        font-size: 150px;
+        font-size: 120px;
         text-align: center;
     }
 
