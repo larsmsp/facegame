@@ -1,13 +1,10 @@
+import Emoji from "../components/Emoji";
+import React from "react";
+import css from "styled-jsx/css";
 
-import Emoji from '../components/Emoji'
-import React from 'react'
-import css from 'styled-jsx/css'
-
-const CSS = css`
-`
+const CSS = css``;
 
 class HighscoreBoard extends React.Component {
-
     ////////////////////////////////////////////////////////////////////////////
     // Lifecycle
     ////////////////////////////////////////////////////////////////////////////
@@ -16,8 +13,8 @@ class HighscoreBoard extends React.Component {
     // Rendering
     ////////////////////////////////////////////////////////////////////////////
 
-    render () {
-        const {admin} = this.props
+    render() {
+        const { admin } = this.props;
 
         return (
             <div className="finished">
@@ -25,11 +22,15 @@ class HighscoreBoard extends React.Component {
 
                 <h1>Congrats!</h1>
                 <img src={playerImageUrl} />
-                <p>You scored <strong>{points}</strong> points!</p>
-                <p><small>Game will reset in a few seconds ...</small></p>
+                <p>
+                    You scored <strong>{points}</strong> points!
+                </p>
+                <p>
+                    <small>Game will reset in a few seconds ...</small>
+                </p>
             </div>
-        )
+        );
     }
 }
 
-export default HighscoreBoard
+export default HighscoreBoard;

@@ -1,9 +1,9 @@
 // next.config.js
 module.exports = {
-  exportPathMap: function(defaultPathMap) {
-    return {
-      '/': { page: '/' },
-      '/debug': { page: '/debug' },
+    exportPathMap: function(defaultPathMap) {
+        return {
+            "/": { page: "/" },
+            "/debug": { page: "/debug" }
+        };
     }
-  }
-}
+};

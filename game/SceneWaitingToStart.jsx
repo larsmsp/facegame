@@ -1,64 +1,61 @@
-
-import Emoji from '../components/Emoji'
-import React from 'react'
-import css from 'styled-jsx/css'
-import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED } from '../game'
+import Emoji from "../components/Emoji";
+import React from "react";
+import css from "styled-jsx/css";
+import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED } from "../game";
 
 const CSS = css`
-.waiting-to-start {
-    margin-top: 0vh;
-    font-size: 150px;
-    text-align: center;
-}
+    .waiting-to-start {
+        margin-top: 0vh;
+        font-size: 150px;
+        text-align: center;
+    }
 
-h1 {
-    font-size: 9vh;
-    color: white;
-    margin: 0;
-    margin-bottom: 10vh;
-    margin-top: 3vh;
-}
+    h1 {
+        font-size: 9vh;
+        color: white;
+        margin: 0;
+        margin-bottom: 10vh;
+        margin-top: 3vh;
+    }
 
-p {
-    font-size: 5vh;
-    color: white;
-}
+    p {
+        font-size: 5vh;
+        color: white;
+    }
 
-p.branding {
-    font-size: 3vh;
-}
+    p.branding {
+        font-size: 3vh;
+    }
 
-p.pitch {
-    font-size: 2vh;
-    margin-top: 10vh;
-}
+    p.pitch {
+        font-size: 2vh;
+        margin-top: 10vh;
+    }
 
-.computas {
-    transform: scale(1.5) translateY(0.1em);
-    width: 4em;
-    margin-left: 1.3em;
-    margin-right: 1.3em;
-}
+    .computas {
+        transform: scale(1.5) translateY(0.1em);
+        width: 4em;
+        margin-left: 1.3em;
+        margin-right: 1.3em;
+    }
 
-.google {
-    transform: scale(1.4) translateY(0.4em);
-    width: 4em;
-    margin-left: 1.3em;
-    margin-right: 1.3em;
-}
-`
+    .google {
+        transform: scale(1.4) translateY(0.4em);
+        width: 4em;
+        margin-left: 1.3em;
+        margin-right: 1.3em;
+    }
+`;
 
 class SceneWaitingToStart extends React.Component {
-
-    render () {
+    render() {
         return (
             <div className="waiting-to-start">
                 <style jsx>{CSS}</style>
 
                 <h1>Hello!</h1>
 
-                <Emoji emotion={EMOTION_HAPPY} style={{
-                }}/>
+                <Emoji emotion={EMOTION_HAPPY} style={{}} />
 
                 <p>Smile to start the game!</p>
 
@@ -71,8 +68,8 @@ class SceneWaitingToStart extends React.Component {
 
                 <p className="pitch">PS. We're hiring!</p>
             </div>
-        )
+        );
     }
 }
 
-export default SceneWaitingToStart
+export default SceneWaitingToStart;
