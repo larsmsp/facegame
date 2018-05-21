@@ -2,7 +2,7 @@ import Emoji from "../components/Emoji";
 import DebugControls from "../components/DebugControls";
 import React from "react";
 import css from "styled-jsx/css";
-import { EMOTION_CONTENT } from ".";
+import { ALL_EMOTIONS, EMOTION_CONTENT } from ".";
 import uuidv4 from "uuid/v4";
 
 const _DefaultState = {
@@ -11,10 +11,11 @@ const _DefaultState = {
 
     detectedEmotion: "",
     videoWidth: 0,
-    videoHeight: 0
+    videoHeight: 0,
+    latency: 0
 };
 
-const INITIAL_CAPTURE_INTERVAL = 2500;
+const INITIAL_CAPTURE_INTERVAL = 700;
 
 const CSS = css`
     .video-area video {
@@ -87,7 +88,7 @@ class WebcamCapture extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevState.cameraReady === false || prevState.socketReady === false) {
             if (this.state.cameraReady && this.state.socketReady) {
-                this._captureInterval = setInterval(this._captureAndRecognize.bind(this), 2500);
+                this._captureInterval = setInterval(this._captureAndRecognize.bind(this), INITIAL_CAPTURE_INTERVAL);
             }
         }
     }
@@ -96,23 +97,15 @@ class WebcamCapture extends React.Component {
         this._stopWebsocketConnection(false);
     }
 
-    _stopWebsocketConnection(updateState = true) {
-        if (this._captureInterval) {
-            clearInterval(this._captureInterval);
-            this._captureInterval = null;
-        }
+    ////////////////////////////////////////////////////////////////////////////
+    // Event handlers
+    ////////////////////////////////////////////////////////////////////////////
 
-        if (this._socket) {
-            console.warn("Closing websocket connection...");
-            this._socket.close();
-            this._socket = null;
-        }
-
-        if (updateState) {
-            this.setState({
-                socketReady: false
-            });
-        }
+    handleInputEmotion(emotion) {
+        this.setState({
+            detectedEmotion: emotion
+        });
+        this.props.onInputEmotion(emotion, this._captureImage());
     }
 
     handleWebsocketError(error) {
@@ -127,109 +120,48 @@ class WebcamCapture extends React.Component {
         }
     }
 
-    _startWebsocketConnection() {
-        try {
-            const socket = new WebSocket("ws://" + document.location.hostname + ":4001/", "face");
+    handleWebsocketPacket(packet) {
+        switch (packet.type) {
+            case "Hello":
+                // Server connected, yay!
+                break;
 
-            // Connection error
-            socket.addEventListener("error", event => {
-                console.error("Websocket connection error, retrying in 2 seconds...");
-                this.handleWebsocketError(event.error);
-            });
-
-            // Connection closed
-            socket.addEventListener("close", event => {
-                console.warn("Websocket connection closed");
-                this._stopWebsocketConnection();
-
-                // Retry again soon
-                if (!this._retrySocketTimeout) {
-                    this._retrySocketTimeout = setTimeout(() => {
-                        this._retrySocketTimeout = null;
-                        this._startWebsocketConnection();
-                    }, 1000);
+            case "RecognitionResult":
+                if (packet.faces.length > 1) {
+                    this.props.onMultipleFaces();
                 }
-            });
 
-            // Connection opened
-            socket.addEventListener("open", event => {
-                console.warn("Websocket connection opened");
-                this._socket = socket;
-                this.setState({
-                    socketReady: true
-                });
-            });
+                if (packet.faces.length > 0) {
+                    // Pick first face, and top emotion detected
+                    const face = packet.faces[0];
+                    let topEmotion = {
+                        emotion: EMOTION_CONTENT,
+                        likeliness: 0
+                    };
 
-            // Listen for messages
-            socket.addEventListener("message", event => {
-                console.log("Message from server ", event.data);
-            });
-        } catch (error) {
-            // Retry after timeout
-            console.error(error);
-        }
-    }
-
-    _captureAndRecognize() {
-        // Socket and camera available, update with cool stuff!
-        const msg = {
-            type: "RecognizeImage",
-            tag: uuidv4(),
-            captureTime: new Date().toISOString(),
-            imageBase64: this._captureImage()
-        };
-
-        this._socket.send(JSON.stringify(msg));
-    }
-
-    _startWebcameCapture() {
-        const { videoElement, captureCanvas } = this.refs;
-
-        let _startWebcam = stream => {
-            videoElement.srcObject = stream;
-            videoElement
-                .play()
-                .then(() => {
-                    this.setState({
-                        cameraReady: true
-                    });
-
-                    this.props.onCameraReady();
-                })
-                .catch(err => alert(err));
-        };
-
-        navigator.mediaDevices.enumerateDevices().then(function(devices) {
-            devices.forEach(function(device) {
-                console.log(device.kind + ": " + device.label + " id = " + device.deviceId);
-            });
-        });
-
-        navigator.getUserMedia(
-            {
-                video: {
-                    mandatory: {
-                        minWidth: 1280,
-                        minHeight: 720
+                    for (const emotionName of ALL_EMOTIONS) {
+                        const emotionLikeliness = face.emotion[emotionName];
+                        if (emotionLikeliness > topEmotion.likeliness) {
+                            topEmotion = {
+                                emotion: emotionName,
+                                likeliness: emotionLikeliness
+                            };
+                        }
                     }
+
+                    const captureTime = new Date(packet.captureTime);
+                    const now = new Date();
+                    this.setState({
+                        latency: now.getTime() - captureTime.getTime(),
+                        detectedEmotion: topEmotion.emotion
+                    });
+                    this.props.onInputEmotion(topEmotion.emotion, this._captureImage());
                 }
-            },
-            _startWebcam,
-            error => {
-                alert("You must grant video access for the game to work.\n\n" + error.code);
-            }
-        );
-    }
+                break;
 
-    ////////////////////////////////////////////////////////////////////////////
-    // Event handlers
-    ////////////////////////////////////////////////////////////////////////////
-
-    handleInputEmotion(emotion) {
-        this.setState({
-            detectedEmotion: emotion
-        });
-        this.props.onInputEmotion(emotion, this._captureImage());
+            default:
+                console.warn(`Unknown packet from server: ${packet.type}`);
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -249,7 +181,7 @@ class WebcamCapture extends React.Component {
         if (badStatus.length === 0) {
             return (
                 <div className="status">
-                    <p className="good">Latency xxx ms</p>
+                    <p className="good">Latency {this.state.latency} ms</p>
                 </div>
             );
         }
@@ -320,6 +252,118 @@ class WebcamCapture extends React.Component {
         });
 
         return mugshot;
+    }
+    _stopWebsocketConnection(updateState = true) {
+        if (this._captureInterval) {
+            clearInterval(this._captureInterval);
+            this._captureInterval = null;
+        }
+
+        if (this._socket) {
+            console.warn("Closing websocket connection...");
+            this._socket.close();
+            this._socket = null;
+        }
+
+        if (updateState) {
+            this.setState({
+                socketReady: false
+            });
+        }
+    }
+
+    _startWebsocketConnection() {
+        try {
+            const socket = new WebSocket("ws://" + document.location.hostname + ":4001/", "face");
+
+            // Connection error
+            socket.addEventListener("error", event => {
+                console.error("Websocket connection error, retrying in 2 seconds...");
+                this.handleWebsocketError(event.error);
+            });
+
+            // Connection closed
+            socket.addEventListener("close", event => {
+                console.warn("Websocket connection closed");
+                this._stopWebsocketConnection();
+
+                // Retry again soon
+                if (!this._retrySocketTimeout) {
+                    this._retrySocketTimeout = setTimeout(() => {
+                        this._retrySocketTimeout = null;
+                        this._startWebsocketConnection();
+                    }, 1000);
+                }
+            });
+
+            // Connection opened
+            socket.addEventListener("open", event => {
+                console.warn("Websocket connection opened");
+                this._socket = socket;
+                this.setState({
+                    socketReady: true
+                });
+            });
+
+            // Listen for messages
+            socket.addEventListener("message", event => {
+                this.handleWebsocketPacket(JSON.parse(event.data));
+            });
+        } catch (error) {
+            // Retry after timeout
+            console.error(error);
+        }
+    }
+
+    _captureAndRecognize() {
+        // Socket and camera available, update with cool stuff!
+        const msg = {
+            type: "RecognizeImage",
+            tag: uuidv4(),
+            captureTime: new Date().toISOString(),
+            imageBase64: this._captureImage()
+        };
+
+        this._socket.send(JSON.stringify(msg));
+    }
+
+    _startWebcameCapture() {
+        const { videoElement, captureCanvas } = this.refs;
+
+        let _startWebcam = stream => {
+            videoElement.srcObject = stream;
+            videoElement
+                .play()
+                .then(() => {
+                    this.setState({
+                        cameraReady: true
+                    });
+
+                    this.props.onCameraReady();
+                })
+                .catch(err => alert(err));
+        };
+
+        navigator.mediaDevices.enumerateDevices().then(function(devices) {
+            devices.forEach(function(device) {
+                console.log(device.kind + ": " + device.label + " id = " + device.deviceId);
+            });
+        });
+
+        navigator.getUserMedia(
+            {
+                video: {
+                    mandatory: {
+                        minWidth: 1280,
+                        minHeight: 720
+                    }
+                }
+            },
+            _startWebcam,
+            error => {
+                alert("You must grant video access for the game to work.\n\n" + error.code);
+            }
+        );
     }
 }
 
