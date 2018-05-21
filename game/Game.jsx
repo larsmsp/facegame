@@ -247,6 +247,9 @@ class Game extends React.Component {
     }
 
     handleEndGame() {
+        // Record highscore
+        Highscore.recordHighscore(this.state.playerImageUrl, this.state.level.no, this.state.points)
+
         // Finish game
         this.setState({
             mode: MODE_FINISHED,
