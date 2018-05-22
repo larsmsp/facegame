@@ -10,7 +10,6 @@ const CSS = css`
         left: 50%;
         top: 50%;
         width: 100%;
-        height: 100%;
     }
 
     .level .emoji {
@@ -97,6 +96,19 @@ class SceneLevel extends React.Component {
 
                 {this.state.emojis.map(this.renderEmoji.bind(this))}
 
+                {/* Hidden Computas logo SVG, used by level 6 to trace out the logo path */}
+                <svg style={{ display: "none" }}>
+                    <path
+                        ref="computasLogoPath"
+                        id="path"
+                        fill="none"
+                        stroke="red"
+                        strokeWidth="2.8243"
+                        strokeMiterlimit="10"
+                        d="M75.8101,45.3015 C75.0921,51.2475 72.8841,56.7335 69.5701,61.3765 C63.2231,70.2685 52.8191,76.0665 41.0611,76.0665 C21.5621,76.0665 5.7881,60.1235 6.0601,40.5635 C6.3281,21.3355 22.3061,5.8065 41.5341,6.0605 C52.9871,6.2125 63.1101,11.8655 69.3871,20.4965 C72.7041,25.0565 74.9451,30.4475 75.7411,36.2995 C75.8471,37.0735 75.2411,37.7625 74.4601,37.7625 L59.4521,37.7625 C58.8601,37.7625 58.3471,37.3585 58.2041,36.7835 C56.2241,28.8525 48.8901,23.0415 40.2621,23.4225 C31.1471,23.8235 23.7481,31.2695 23.4011,40.3855 C23.0171,50.4615 31.0711,58.7505 41.0611,58.7505 C49.5171,58.7505 56.5841,52.8115 58.3221,44.8765 C58.4531,44.2825 58.9731,43.8565 59.5811,43.8565 L74.5271,43.8565 C75.3001,43.8565 75.9021,44.5335 75.8101,45.3015 M76.3321,20.4815 C69.2371,8.3075 56.0441,0.1245 40.9381,0.1245 C18.3291,0.1245 0.0001,18.4525 0.0001,41.0625 C0.0001,63.6715 18.3291,82.0005 40.9381,82.0005 C56.1611,82.0005 69.4421,73.6905 76.4961,61.3615 C79.4861,56.1345 81.3541,50.1855 81.7801,43.8415 C81.8421,42.9225 81.8761,41.9965 81.8761,41.0625 C81.8761,39.9465 81.8301,38.8415 81.7421,37.7475 C81.2401,31.4885 79.3311,25.6295 76.3321,20.4815"
+                    />
+                </svg>
+
                 {level === 1 ? <p className="help">Make the same face as the Emojis to blow them up!</p> : null}
             </div>
         );
@@ -129,6 +141,7 @@ class SceneLevel extends React.Component {
 
         const tx = DateTime.local().diff(startedAt).milliseconds / 1000;
         const count = emojis.length;
+        const computasLogoPathLength = this.refs.computasLogoPath.getTotalLength();
 
         for (var i = 0; i < count; ++i) {
             const emoji = emojis[i];
@@ -137,21 +150,21 @@ class SceneLevel extends React.Component {
             switch (level) {
                 case 1:
                     // Wave
-                    node.style.top = -11 + Math.cos(tx + i / 2) * 27 + "vh";
+                    node.style.top = -11 + Math.cos(tx / 2 + i / 2) * 27 + "vh";
                     node.style.left = i * 10 - 22.5 + "vw";
                     break;
 
                 case 2:
                     // Circle
-                    node.style.top = Math.cos(tx + 360 * i / count) * 30 - 10 + "vh";
-                    node.style.left = Math.sin(tx + 360 * i / count) * 30 + "vw";
+                    node.style.top = Math.cos(tx / 2 + 360 * i / count) * 30 - 5 + "vh";
+                    node.style.left = Math.sin(tx / 2 + 360 * i / count) * 30 + "vw";
                     break;
 
                 case 3: {
                     // Sideways wave
                     const a = i % 2 == 0 ? Math.sin : Math.cos;
                     node.style.top = i * 2.5 - 30 + "vh";
-                    node.style.left = a(tx + i / 2) * 30 + "vw";
+                    node.style.left = a(tx / 2 + i / 2) * 30 + "vw";
                     break;
                 }
 
@@ -171,15 +184,34 @@ class SceneLevel extends React.Component {
                 case 5: {
                     // Sideways wave
                     const a = i % 2 == 0 ? Math.sin : Math.cos;
-                    node.style.top = Math.floor(i / 2) * 5 - 30 + "vh";
+                    node.style.top = Math.floor(i / 2) * 5 - 40 + "vh";
                     node.style.left = a(tx + i / 2) * 30 + "vw";
                     break;
                 }
 
-                default:
-                    node.style.top = -10 + Math.cos(tx + 360 * i / count) * 30 + "vh";
-                    node.style.left = Math.sin(tx + 360 * i / count) * 30 + "vw";
+                case 6: {
+                    // Computas logo
+                    let pos = ((i / count + tx / 25) % 1) / 0.99;
+
+                    const pt = this.refs.computasLogoPath.getPointAtLength(
+                        pos * this.refs.computasLogoPath.getTotalLength()
+                    );
+
+                    node.style.left = pt.x / 1.4 - 30 + "vh";
+                    node.style.top = pt.y / 1.4 - 35 + "vh";
+
                     break;
+                }
+
+                default: {
+                    const cosx = Math.cos(tx / 4 + 360 * i / count);
+                    const cosfx = Math.cos(tx / 4 + 360 * i / count);
+                    const sinx = Math.sin(tx + 360 * i / count);
+                    const sinfx = Math.sin(tx + 360 * i / count);
+                    node.style.top = -10 + cosx * 30 + sinfx * 5 + "vh";
+                    node.style.left = sinx * 30 + cosfx * 5 + "vw";
+                    break;
+                }
             }
         }
     }
@@ -197,9 +229,13 @@ class SceneLevel extends React.Component {
         } else if (levelNo === 4) {
             this._generateEmojis(30, true);
         } else if (levelNo === 5) {
-            this._generateEmojis(40, true);
+            this._generateEmojis(30, true);
+        } else if (levelNo === 6) {
+            this._generateEmojis(35 + Math.floor(Math.random() * 10), true);
+        } else if (levelNo === 7) {
+            this._generateEmojis(40 + Math.floor(Math.random() * 10), true);
         } else {
-            this._generateEmojis(50, true);
+            this._generateEmojis(40 + Math.floor(Math.random() * 15), true);
         }
 
         this.setState({
