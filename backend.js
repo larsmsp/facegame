@@ -86,6 +86,7 @@ function detectFaces(image, callback) {
                             Suprised: googleLikelihoodToNumber(face.surpriseLikelihood),
                             Content: 0.1 // Client will pick most likely, which will be this if the others have low detection value
                         },
+                        boundingBox: face.boundingPoly,
                         faceAttributes: face
                     };
                 })

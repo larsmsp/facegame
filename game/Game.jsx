@@ -40,6 +40,7 @@ const _DefaultState = {
     playerImageUrl: null,
     lastInputEmotion: EMOTION_CONTENT,
     lastInputAt: DateTime.local(),
+    gameFinishedAt: DateTime.local(),
     cameraReady: false,
     particlesReady: true
 };
@@ -199,11 +200,15 @@ class Game extends React.Component {
                 break;
 
             case MODE_PLAYING_LEVEL:
-                if (this.state.lastInputEmotion !== emotion) {
-                    this.setState({
-                        lastInputEmotion: emotion
-                    });
+                const secondsSinceFinished = DateTime.local().diff(this.state.gameFinishedAt).milliseconds;
+                if (secondsSinceFinished > 5) {
+                    if (this.state.lastInputEmotion !== emotion) {
+                        this.setState({
+                            lastInputEmotion: emotion
+                        });
+                    }
                 }
+
                 break;
             default:
                 break;
@@ -276,7 +281,8 @@ class Game extends React.Component {
         setTimeout(() => {
             this.setState({
                 mode: MODE_WAITING_TO_START,
-                playerImageUrl: null
+                playerImageUrl: null,
+                gameFinishedAt: DateTime.local()
             });
         }, CONGRATS_SCREEN_SHOWN_FOR_SECONDS * 1000);
     }

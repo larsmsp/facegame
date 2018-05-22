@@ -153,6 +153,7 @@ class WebcamCapture extends React.Component {
                         likeliness: 0
                     };
 
+                    debugger;
                     for (const emotionName of ALL_EMOTIONS) {
                         const emotionLikeliness = face.emotion[emotionName];
                         if (emotionLikeliness > topEmotion.likeliness) {

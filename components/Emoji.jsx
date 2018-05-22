@@ -23,7 +23,7 @@ class Emoji extends React.Component {
 
         return (
             <span className="emoji" {...otherProps}>
-                😈
+                😴
             </span>
         );
     }

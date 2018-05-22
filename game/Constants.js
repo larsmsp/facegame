@@ -8,13 +8,13 @@ export const ALL_EMOTIONS = [EMOTION_HAPPY, EMOTION_SAD, EMOTION_ANGRY, EMOTION_
 export const ALL_EMOTION_EMOJIS = {
     [EMOTION_CONTENT]: "😐",
     [EMOTION_HAPPY]: "😁",
-    [EMOTION_SAD]: "😩",
+    [EMOTION_SAD]: "😞",
     [EMOTION_SUPRISED]: "😲",
     [EMOTION_ANGRY]: "😠"
 };
 
 export const GAME_LENGTH_IN_SECONDS = 45;
 export const LEVEL_MAX_LENGTH_IN_SECONDS = 10;
-export const SCREENSAVE_AFTER_SECONDS = 60;
+export const SCREENSAVE_AFTER_SECONDS = 20;
 export const RELOAD_AFTER_SECONDS = 300;
-export const CONGRATS_SCREEN_SHOWN_FOR_SECONDS = 10;
+export const CONGRATS_SCREEN_SHOWN_FOR_SECONDS = 15;
