@@ -12,13 +12,16 @@ const _DefaultState = {
     detectedEmotion: "",
     videoWidth: 0,
     videoHeight: 0,
-    latency: 0
+    latency: 0,
+    lastInputAt: null
 };
 
 const INITIAL_CAPTURE_INTERVAL = 700;
+const IDLE_TIMEOUT = 0;
 
 const CSS = css`
-    .video-area video {
+    .video-area video,
+    .video-area .last-capture {
         position: absolute;
         width: 15vw;
         height: 15vh;
@@ -54,13 +57,6 @@ const CSS = css`
 
     .video-area canvas {
         visibility: hidden;
-    }
-
-    .last-capture {
-        position: absolute;
-        left: 15vw;
-        bottom: 0;
-        background-color: white;
     }
 `;
 
@@ -105,7 +101,25 @@ class WebcamCapture extends React.Component {
         this.setState({
             detectedEmotion: emotion
         });
+
+        // If no input for ten seconds, clear the input
+        if (this._idleInputTimer) {
+            clearInterval(this._idleInputTimer);
+        }
+        this._idleInputTimer = setTimeout(this.handleFaceDisappeared.bind(this), 5000);
+
         this.props.onInputEmotion(emotion, this._captureImage());
+    }
+
+    handleFaceDisappeared() {
+        // Clear timer
+        this._idleInputTimer = null;
+
+        this.setState({
+            detectedEmotion: ""
+        });
+
+        this.props.onInputEmotion("", null);
     }
 
     handleWebsocketError(error) {
@@ -152,10 +166,10 @@ class WebcamCapture extends React.Component {
                     const captureTime = new Date(packet.captureTime);
                     const now = new Date();
                     this.setState({
-                        latency: now.getTime() - captureTime.getTime(),
-                        detectedEmotion: topEmotion.emotion
+                        latency: now.getTime() - captureTime.getTime()
                     });
-                    this.props.onInputEmotion(topEmotion.emotion, this._captureImage());
+
+                    this.handleInputEmotion(topEmotion.emotion);
                 }
                 break;
 
@@ -206,20 +220,18 @@ class WebcamCapture extends React.Component {
                     {CSS}
                 </style>
 
-                <video ref="videoElement" />
+                <video ref="videoElement" style={{ opacity: detectedEmotion === "" ? 1 : 0 }} />
+                <img
+                    className="last-capture"
+                    src={lastCapturedImageUrl}
+                    style={{ opacity: detectedEmotion === "" ? 0 : 1 }}
+                />
 
                 <Emoji emotion={detectedEmotion} />
 
                 {this.renderStatus()}
 
                 <canvas ref="captureCanvas" />
-                {debug && false ? (
-                    <img
-                        className="last-capture"
-                        src={lastCapturedImageUrl}
-                        style={{ width: videoWidth + "px", height: videoHeight + "px" }}
-                    />
-                ) : null}
 
                 {debug ? <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)} /> : null}
             </div>
