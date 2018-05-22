@@ -53,7 +53,7 @@ class SceneLevel extends React.Component {
     }
 
     componentDidUpdate(prevProps) {
-        if (this.props.lastInputEmotion !== prevProps.lastInputEmotion) {
+        if (this.props.lastInputEmotion !== prevProps.lastInputEmotion && this.props.lastInputEmotion !== "") {
             const killCount = this._killAllEmojis(this.props.lastInputEmotion);
             if (killCount > 0) {
                 this.props.onScorePoints(killCount);
@@ -217,8 +217,10 @@ class SceneLevel extends React.Component {
     }
 
     _setLevel(levelNo) {
-        this._killAllEmojis();
-        console.warn("Setting to level: " + levelNo);
+        const remainingEmojis = this._killAllEmojis("", "heavy");
+
+        // Score half points for remaining emojis, to be kind to bad players
+        this.props.onScorePoints(Math.floor(remainingEmojis / 2));
 
         if (levelNo === 1) {
             this._generateEmojis(5, true);
@@ -263,18 +265,18 @@ class SceneLevel extends React.Component {
         };
     }
 
-    _killAllEmojis(emotionToKill = "") {
+    _killAllEmojis(emotionToKill = "", particleEffect = "pop") {
         let emojis = [...this.state.emojis];
         let killCount = 0;
         if (emotionToKill === "") {
             killCount = emojis.filter(e => !e.dead).length;
-            emojis = emojis.map(this._killEmoji.bind(this));
+            emojis = emojis.map((e, i) => this._killEmoji(e, i, particleEffect));
         } else {
             // Kill specific type
             emojis = emojis.map((e, emojiIndex) => {
                 if (e.emotion === emotionToKill && !e.dead) {
                     killCount++;
-                    return this._killEmoji(e, emojiIndex);
+                    return this._killEmoji(e, emojiIndex, particleEffect);
                 }
 
                 return e;
@@ -288,10 +290,10 @@ class SceneLevel extends React.Component {
         return killCount;
     }
 
-    _killEmoji(emoji, emojiIndex) {
+    _killEmoji(emoji, emojiIndex, particleEffect) {
         if (!emoji.dead) {
             const node = document.getElementById("e-" + emojiIndex);
-            this.props.onParticleEffect(node.offsetLeft, node.offsetTop);
+            this.props.onParticleEffect(node.offsetLeft, node.offsetTop, particleEffect);
         }
 
         return {

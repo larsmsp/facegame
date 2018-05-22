@@ -221,9 +221,9 @@ class Game extends React.Component {
         });
     }
 
-    handleParticleEffect(x, y) {
+    handleParticleEffect(x, y, particleEffect) {
         let particleAccelerator = this.refs.particleArea;
-        particleAccelerator.createExplosion(x, y);
+        particleAccelerator.createExplosion(x, y, particleEffect);
     }
 
     handleLevelComplete() {
@@ -241,15 +241,13 @@ class Game extends React.Component {
                     ...this.state.level,
                     no: nextLevel,
                     secondsLeftOfLevel: LEVEL_MAX_LENGTH_IN_SECONDS
-                },
-                // Reset input when new level starts
-                lastInputEmotion: ""
+                }
             });
         }, 100);
     }
 
     handleStartGame(mugshot) {
-        this.refs.particleArea.createExplosion(0, 0);
+        this.refs.particleArea.createExplosion(0, 0, "pop");
 
         this.setState({
             mode: MODE_PLAYING_LEVEL,
@@ -260,8 +258,7 @@ class Game extends React.Component {
                 secondsLeftOfGame: GAME_LENGTH_IN_SECONDS,
                 secondsLeftOfLevel: LEVEL_MAX_LENGTH_IN_SECONDS,
                 no: 1
-            },
-            lastInputEmotion: ""
+            }
         });
     }
 

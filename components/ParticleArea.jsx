@@ -5,11 +5,11 @@ class ParticleArea extends React.Component {
     // Public functions
     ////////////////////////////////////////////////////////////////////////////
 
-    createExplosion(x, y) {
+    createExplosion(x, y, heavyGravity = false) {
         // Transform coordinate system
         x = this.refs.container.clientWidth / 2 + x + 20;
         y = this.refs.container.clientHeight / 2 + y + 20;
-        _createExplosion(x, y);
+        _createExplosion(x, y, heavyGravity);
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -247,13 +247,14 @@ if (process.browser) {
         };
     }
 
-    function createFireworksExplosionEmitter(x, y, particleCount) {
+    function createFireworksExplosionEmitter(x, y, particleCount, particleEffect) {
         let emitter = new Proton.Emitter();
         emitter.rate = new Proton.Rate(particleCount, 1);
         emitter.addInitialize(new Proton.Mass(1));
         emitter.addInitialize(new Proton.Radius(3, 7));
         emitter.addInitialize(new Proton.Life(1, 2));
-        emitter.addInitialize(new Proton.V(new Proton.Span(5, 8), new Proton.Span(0, 360), "polar"));
+        const direction = particleEffect === "heavy" ? new Proton.Span(130, 220) : new Proton.Span(0, 360);
+        emitter.addInitialize(new Proton.V(new Proton.Span(5, 8), direction, "polar"));
 
         emitter.addBehaviour(new Proton.RandomDrift(10, 10, 0.05));
         emitter.addBehaviour(new ProtonLifeAlpha());
@@ -335,8 +336,9 @@ if (process.browser) {
         if (emitter.onDisable) emitter.onDisable(_proton);
     };
 
-    _createExplosion = function(x, y) {
-        _proton.addEmitter(createFireworksExplosionEmitter(x, y, new Proton.Span(30, 40)));
+    _createExplosion = function(x, y, particleEffect) {
+        console.log("Create " + particleEffect + " explosion at " + x + "/" + y);
+        _proton.addEmitter(createFireworksExplosionEmitter(x, y, new Proton.Span(30, 40), particleEffect));
     };
 
     function tick() {
