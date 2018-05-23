@@ -5,7 +5,9 @@ const uuidv4 = require("uuid/v4");
 const GoogleVision = require("@google-cloud/vision");
 
 // Creates a client
-const googleVisionClient = new GoogleVision.ImageAnnotatorClient();
+const googleVisionClient = new GoogleVision.ImageAnnotatorClient({
+    keyFilename: "vision-service-account.json"
+});
 
 const PORT = 4001;
 
