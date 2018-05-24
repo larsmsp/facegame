@@ -16,7 +16,7 @@ const _DefaultState = {
     lastInputAt: null
 };
 
-const INITIAL_CAPTURE_INTERVAL = 700;
+const INITIAL_CAPTURE_INTERVAL = 1700;
 const IDLE_TIMEOUT = 0;
 
 const CSS = css`
@@ -259,7 +259,7 @@ class WebcamCapture extends React.Component {
         }
 
         this._canvasContext.drawImage(videoElement, 0, 0, videoElement.videoWidth, videoElement.videoHeight);
-        const mugshot = this._canvasContext.canvas.toDataURL("image/jpeg", 0.9);
+        const mugshot = this._canvasContext.canvas.toDataURL("image/jpeg", 0.4);
         this.setState({
             lastCapturedImageUrl: mugshot
         });

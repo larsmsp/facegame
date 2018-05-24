@@ -1,7 +1,13 @@
 import Emoji from "../components/Emoji";
 import React from "react";
 import css from "styled-jsx/css";
+import { DateTime } from "luxon";
 import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED } from "../game";
+
+const _DefaultState = {
+    lastInputAt: DateTime.local(),
+    hasBeenSmilingFor: 0
+};
 
 const CSS = css`
     .waiting-to-start {
@@ -21,6 +27,16 @@ const CSS = css`
     p {
         font-size: 5vh;
         color: white;
+    }
+
+    .smile-progress {
+        border-radius: 50%;
+        width: 1px;
+        height: 1px;
+        background-color: red;
+        position: absolute;
+        top: 100px;
+        left: calc(50% - 64px);
     }
 
     p.branding {
@@ -48,6 +64,46 @@ const CSS = css`
 `;
 
 class SceneWaitingToStart extends React.Component {
+    constructor() {
+        super();
+
+        this.state = _DefaultState;
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Component lifecycle
+    ////////////////////////////////////////////////////////////////////////////
+
+    componentDidUpdate(prevProps, prevState) {
+        if (this.props.lastInputEmotion === EMOTION_HAPPY) {
+            this.setState({
+                startedSmilingAt: DateTime.local()
+            });
+
+            this._startSmileAnimation();
+        } else {
+            this.setState({
+                startedSmilingAt: null
+            });
+        }
+    }
+
+    _startSmileAnimation() {
+        if (this._smileAnimation) {
+            return;
+        }
+
+        this._smileAnimation = requestAnimationFrame(animateSmile);
+    }
+
+    _stopSmileAnimation() {
+        requestAnim
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Render
+    ////////////////////////////////////////////////////////////////////////////
+
     render() {
         return (
             <div className="waiting-to-start">
@@ -55,7 +111,8 @@ class SceneWaitingToStart extends React.Component {
 
                 <h1>Hello!</h1>
 
-                <Emoji emotion={EMOTION_HAPPY} style={{}} />
+                <Emoji emotion={EMOTION_HAPPY} />
+                <div className="smile-progress" />
 
                 <p>Smile to start the game!</p>
 

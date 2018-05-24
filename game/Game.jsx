@@ -14,7 +14,8 @@ import {
     LEVEL_MAX_LENGTH_IN_SECONDS,
     SCREENSAVE_AFTER_SECONDS,
     RELOAD_AFTER_SECONDS,
-    CONGRATS_SCREEN_SHOWN_FOR_SECONDS
+    CONGRATS_SCREEN_SHOWN_FOR_SECONDS,
+    SMILE_FOR_SECONDS_TO_START
 } from "./Constants";
 import SceneFinished from "./SceneFinished";
 import SceneLevel from "./SceneLevel";
@@ -39,8 +40,7 @@ const _DefaultState = {
     points: 0,
     playerImageUrl: null,
     lastInputEmotion: EMOTION_CONTENT,
-    lastInputAt: DateTime.local(),
-    gameFinishedAt: DateTime.local(),
+    startedSmilingAt: null,
     cameraReady: false,
     particlesReady: true
 };
@@ -195,18 +195,40 @@ class Game extends React.Component {
 
             case MODE_WAITING_TO_START:
                 if (emotion === EMOTION_HAPPY) {
-                    this.handleStartGame(mugshot);
+                    if (this.state.startedSmilingAt === null) {
+                        console.log("User started smiling");
+                        this.setState({
+                            startedSmilingAt: DateTime.local(),
+                            hasBeenSmilingFor: 0.0
+                        });
+                    } else {
+                        const millisecondsSmiling =
+                            this.state.hasBeenSmilingFor +
+                            DateTime.local().diff(this.state.startedSmilingAt).milliseconds;
+
+                        console.log("User has been smiling for " + millisecondsSmiling);
+                        if (millisecondsSmiling > SMILE_FOR_SECONDS_TO_START * 1000) {
+                            this.handleStartGame(mugshot);
+                        } else {
+                            this.setState({
+                                hasBeenSmilingFor: millisecondsSmiling
+                            });
+                        }
+                    }
+                } else {
+                    console.log("User stopped smiling");
+                    this.setState({
+                        startedSmilingAt: null,
+                        hasBeenSmilingFor: 0
+                    });
                 }
                 break;
 
             case MODE_PLAYING_LEVEL:
-                const secondsSinceFinished = DateTime.local().diff(this.state.gameFinishedAt).milliseconds;
-                if (secondsSinceFinished > 5) {
-                    if (this.state.lastInputEmotion !== emotion) {
-                        this.setState({
-                            lastInputEmotion: emotion
-                        });
-                    }
+                if (this.state.lastInputEmotion !== emotion) {
+                    this.setState({
+                        lastInputEmotion: emotion
+                    });
                 }
 
                 break;
@@ -271,15 +293,16 @@ class Game extends React.Component {
             mode: MODE_FINISHED,
             level: null,
             // Make it so outro is not interrupted immdiately by screensaver
-            lastInputAt: DateTime.local().plus({ seconds: 10 })
+            lastInputAt: DateTime.local().plus({ seconds: 10 }),
+            startedSmilingAt: null,
+            hasBeenSmilingFor: 0
         });
 
         // Reset game after 5s
         setTimeout(() => {
             this.setState({
                 mode: MODE_WAITING_TO_START,
-                playerImageUrl: null,
-                gameFinishedAt: DateTime.local()
+                playerImageUrl: null
             });
         }, CONGRATS_SCREEN_SHOWN_FOR_SECONDS * 1000);
     }
@@ -311,7 +334,12 @@ class Game extends React.Component {
                 break;
 
             case MODE_WAITING_TO_START:
-                main = <SceneWaitingToStart />;
+                main = (
+                    <SceneWaitingToStart
+                        lastInputEmotion={lastInputEmotion}
+                        onStartGame={this.handleStartGame.bind(this)}
+                    />
+                );
                 backgroundEffect = "bubbles";
                 break;
 
