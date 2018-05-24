@@ -89,6 +89,7 @@ function detectFaces(image, callback) {
                             Content: 0.1 // Client will pick most likely, which will be this if the others have low detection value
                         },
                         boundingBox: face.boundingPoly,
+                        headwear: googleLikelihoodToNumber(headwearLikelihood),
                         faceAttributes: face
                     };
                 })
