@@ -1,5 +1,6 @@
 import React from "react";
-import { ALL_EMOTION_EMOJIS, ALL_EMOTIONS } from "../game";
+import { FaceConsumer } from "./FaceAttributes";
+import { ALL_EMOTION_EMOJIS, ALL_EMOTIONS, EMOTION_HAPPY } from "../game";
 
 class Emoji extends React.Component {
     render() {
@@ -13,10 +14,22 @@ class Emoji extends React.Component {
         }
 
         const emoji = ALL_EMOTION_EMOJIS[emotion];
-        if (emoji) {
+        if (emotion === EMOTION_HAPPY) {
+            return (
+                <FaceConsumer>
+                    {faceAttributes => {
+                        return (
+                            <span className="emoji" {...otherProps}>
+                                {faceAttributes.wearingHeadwear ? "🤠" : emoji}
+                            </span>
+                        );
+                    }}
+                </FaceConsumer>
+            );
+        } else if (emoji) {
             return (
                 <span className="emoji" {...otherProps}>
-                    {ALL_EMOTION_EMOJIS[emotion]}
+                    {emoji}
                 </span>
             );
         }

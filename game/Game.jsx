@@ -1,4 +1,5 @@
 import ParticleArea from "../components/ParticleArea";
+import { FaceProvider } from "../components/FaceAttributes";
 import Emoji from "../components/Emoji";
 import LevelProgressBar from "../components/LevelProgressBar";
 import React from "react";
@@ -39,6 +40,7 @@ const _DefaultState = {
     level: null,
     points: 0,
     playerImageUrl: null,
+    playerFaceAttributes: {},
     lastInputEmotion: EMOTION_CONTENT,
     startedSmilingAt: null,
     cameraReady: false,
@@ -130,9 +132,14 @@ class Game extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     handleGameTick() {
+        let secondsSinceLastInput = 0;
+        const { lastInputAt } = this.state;
+        if (lastInputAt) {
+            secondsSinceLastInput = DateTime.local().diff(lastInputAt).milliseconds;
+        }
+
         switch (this.state.mode) {
             case MODE_SCREENSAVER: {
-                const secondsSinceLastInput = DateTime.local().diff(this.state.lastInputAt).milliseconds;
                 if (secondsSinceLastInput > RELOAD_AFTER_SECONDS * 1000) {
                     window.localStorage.setItem(LOCAL_STORAGE_RESUME_KEY, "true");
                     document.location.reload();
@@ -141,7 +148,6 @@ class Game extends React.Component {
             }
 
             case MODE_WAITING_TO_START: {
-                const secondsSinceLastInput = DateTime.local().diff(this.state.lastInputAt).milliseconds;
                 if (secondsSinceLastInput > SCREENSAVE_AFTER_SECONDS * 1000) {
                     // Go to screensaver
                     this.setState({
@@ -237,6 +243,12 @@ class Game extends React.Component {
         }
     }
 
+    handleFaceAttributesChanged(attributes) {
+        this.setState({
+            playerFaceAttributes: attributes
+        });
+    }
+
     handleCameraReady() {
         this.setState({
             cameraReady: true
@@ -319,7 +331,16 @@ class Game extends React.Component {
 
     render() {
         const { debug } = this.props;
-        const { cameraReady, particlesReady, playerImageUrl, mode, level, lastInputEmotion, points } = this.state;
+        const {
+            cameraReady,
+            particlesReady,
+            playerImageUrl,
+            playerFaceAttributes,
+            mode,
+            level,
+            lastInputEmotion,
+            points
+        } = this.state;
 
         let main = null;
         let backgroundEffect = null;
@@ -384,24 +405,27 @@ class Game extends React.Component {
                     secondsTotal={GAME_LENGTH_IN_SECONDS}
                 />
 
-                {level ? <ScoreDisplay score={points} /> : null}
+                <FaceProvider value={playerFaceAttributes}>
+                    {level ? <ScoreDisplay score={points} /> : null}
 
-                <div className="game">
-                    {particlesReady ? <ParticleArea ref="particleArea" effect={backgroundEffect} /> : null}
+                    <div className="game">
+                        {particlesReady ? <ParticleArea ref="particleArea" effect={backgroundEffect} /> : null}
 
-                    {main}
+                        {main}
 
-                    {mode === MODE_FINISHED || mode === MODE_PLAYING_LEVEL ? (
-                        <img className="banner-logo" src="/static/image/logo-banner.png" />
-                    ) : null}
+                        {mode === MODE_FINISHED || mode === MODE_PLAYING_LEVEL ? (
+                            <img className="banner-logo" src="/static/image/logo-banner.png" />
+                        ) : null}
 
-                    <WebcamCapture
-                        ref="camera"
-                        debug={debug}
-                        onInputEmotion={this.handleInputEmotion.bind(this)}
-                        onCameraReady={this.handleCameraReady.bind(this)}
-                    />
-                </div>
+                        <WebcamCapture
+                            ref="camera"
+                            debug={debug}
+                            onInputEmotion={this.handleInputEmotion.bind(this)}
+                            onFaceAttributesChanged={this.handleFaceAttributesChanged.bind(this)}
+                            onCameraReady={this.handleCameraReady.bind(this)}
+                        />
+                    </div>
+                </FaceProvider>
             </div>
         );
     }

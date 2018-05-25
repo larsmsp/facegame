@@ -75,17 +75,18 @@ class SceneWaitingToStart extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     componentDidUpdate(prevProps, prevState) {
-        if (this.props.lastInputEmotion === EMOTION_HAPPY) {
-            this.setState({
-                startedSmilingAt: DateTime.local()
-            });
-
-            this._startSmileAnimation();
-        } else {
-            this.setState({
-                startedSmilingAt: null
-            });
-        }
+        // TODO!
+        // if (this.props.lastInputEmotion === EMOTION_HAPPY) {
+        //     this.setState({
+        //         startedSmilingAt: DateTime.local()
+        //     });
+        //
+        //     this._startSmileAnimation();
+        // } else {
+        //     this.setState({
+        //         startedSmilingAt: null
+        //     });
+        // }
     }
 
     _startSmileAnimation() {
@@ -97,7 +98,7 @@ class SceneWaitingToStart extends React.Component {
     }
 
     _stopSmileAnimation() {
-        requestAnim
+        requestAnim;
     }
 
     ////////////////////////////////////////////////////////////////////////////

@@ -13,10 +13,14 @@ const _DefaultState = {
     videoWidth: 0,
     videoHeight: 0,
     latency: 0,
+    headwearLikelihood: 0,
+    totalImageSize: 0,
     lastInputAt: null
 };
 
-const INITIAL_CAPTURE_INTERVAL = 1700;
+const INITIAL_CAPTURE_INTERVAL = 3700;
+const CAPTURE_QUALITY = 0.2; // Between 0 and 1
+const HEADWEAR_DETECTION_THRESHOLD = 0.2;
 const IDLE_TIMEOUT = 0;
 
 const CSS = css`
@@ -87,6 +91,23 @@ class WebcamCapture extends React.Component {
                 this._captureInterval = setInterval(this._captureAndRecognize.bind(this), INITIAL_CAPTURE_INTERVAL);
             }
         }
+
+        // Update headwear status if confidence is greater than the threshold
+        if (
+            prevState.headwearLikelihood <= HEADWEAR_DETECTION_THRESHOLD &&
+            this.state.headwearLikelihood > HEADWEAR_DETECTION_THRESHOLD
+        ) {
+            this.props.onFaceAttributesChanged({
+                wearingHeadwear: true
+            });
+        } else if (
+            prevState.headwearLikelihood > HEADWEAR_DETECTION_THRESHOLD &&
+            this.state.headwearLikelihood <= HEADWEAR_DETECTION_THRESHOLD
+        ) {
+            this.props.onFaceAttributesChanged({
+                wearingHeadwear: false
+            });
+        }
     }
 
     componentWillUnmount() {
@@ -153,7 +174,6 @@ class WebcamCapture extends React.Component {
                         likeliness: 0
                     };
 
-                    debugger;
                     for (const emotionName of ALL_EMOTIONS) {
                         const emotionLikeliness = face.emotion[emotionName];
                         if (emotionLikeliness > topEmotion.likeliness) {
@@ -167,7 +187,9 @@ class WebcamCapture extends React.Component {
                     const captureTime = new Date(packet.captureTime);
                     const now = new Date();
                     this.setState({
-                        latency: now.getTime() - captureTime.getTime()
+                        latency: now.getTime() - captureTime.getTime() + INITIAL_CAPTURE_INTERVAL / 2,
+                        // Floating average of headwear likelihood
+                        headwearLikelihood: this.state.headwearLikelihood * 0.7 + face.headwear * 0.3
                     });
 
                     this.handleInputEmotion(topEmotion.emotion);
@@ -196,7 +218,10 @@ class WebcamCapture extends React.Component {
         if (badStatus.length === 0) {
             return (
                 <div className="status">
-                    <p className="good">Latency {this.state.latency} ms</p>
+                    <p className="good">
+                        Latency {this.state.latency} ms, {(this.state.totalImageSize / 1024).toFixed(0) + " KB"},{" "}
+                        {this.state.headwearLikelihood.toFixed(2)}
+                    </p>
                 </div>
             );
         }
@@ -259,13 +284,14 @@ class WebcamCapture extends React.Component {
         }
 
         this._canvasContext.drawImage(videoElement, 0, 0, videoElement.videoWidth, videoElement.videoHeight);
-        const mugshot = this._canvasContext.canvas.toDataURL("image/jpeg", 0.4);
+        const mugshot = this._canvasContext.canvas.toDataURL("image/jpeg", CAPTURE_QUALITY);
         this.setState({
             lastCapturedImageUrl: mugshot
         });
 
         return mugshot;
     }
+
     _stopWebsocketConnection(updateState = true) {
         if (this._captureInterval) {
             clearInterval(this._captureInterval);
@@ -336,6 +362,11 @@ class WebcamCapture extends React.Component {
             captureTime: new Date().toISOString(),
             imageBase64: this._captureImage()
         };
+
+        // Record total size sent
+        this.setState({
+            totalImageSize: this.state.totalImageSize + msg.imageBase64.length
+        });
 
         this._socket.send(JSON.stringify(msg));
     }
