@@ -337,7 +337,6 @@ if (process.browser) {
     };
 
     _createExplosion = function(x, y, particleEffect) {
-        console.log("Create " + particleEffect + " explosion at " + x + "/" + y);
         _proton.addEmitter(createFireworksExplosionEmitter(x, y, new Proton.Span(30, 40), particleEffect));
     };
 

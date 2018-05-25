@@ -18,9 +18,9 @@ const _DefaultState = {
     lastInputAt: null
 };
 
-const INITIAL_CAPTURE_INTERVAL = 3700;
+const INITIAL_CAPTURE_INTERVAL = 700;
 const CAPTURE_QUALITY = 0.2; // Between 0 and 1
-const HEADWEAR_DETECTION_THRESHOLD = 0.2;
+const HEADWEAR_DETECTION_THRESHOLD = 0.12;
 const IDLE_TIMEOUT = 0;
 
 const CSS = css`
@@ -88,7 +88,7 @@ class WebcamCapture extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevState.cameraReady === false || prevState.socketReady === false) {
             if (this.state.cameraReady && this.state.socketReady) {
-                this._captureInterval = setInterval(this._captureAndRecognize.bind(this), INITIAL_CAPTURE_INTERVAL);
+                this._captureInterval = setTimeout(this._captureAndRecognize.bind(this), INITIAL_CAPTURE_INTERVAL);
             }
         }
 
@@ -187,7 +187,7 @@ class WebcamCapture extends React.Component {
                     const captureTime = new Date(packet.captureTime);
                     const now = new Date();
                     this.setState({
-                        latency: now.getTime() - captureTime.getTime() + INITIAL_CAPTURE_INTERVAL / 2,
+                        latency: now.getTime() - captureTime.getTime(),
                         // Floating average of headwear likelihood
                         headwearLikelihood: this.state.headwearLikelihood * 0.7 + face.headwear * 0.3
                     });
@@ -369,6 +369,9 @@ class WebcamCapture extends React.Component {
         });
 
         this._socket.send(JSON.stringify(msg));
+
+        const rescheduleIn = this.state.latency * 0.5 + INITIAL_CAPTURE_INTERVAL * 0.5;
+        setTimeout(this._captureAndRecognize.bind(this), rescheduleIn);
     }
 
     _startWebcameCapture() {
