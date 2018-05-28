@@ -163,7 +163,7 @@ class WebcamCapture extends React.Component {
 
             case "RecognitionResult":
                 if (packet.faces.length > 1) {
-                    this.props.onMultipleFaces();
+                    this.props.onMultipleFacesDetected();
                 }
 
                 if (packet.faces.length > 0) {

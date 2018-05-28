@@ -1,5 +1,5 @@
 import React from "react";
-import { WebApp } from "../game";
+import { WebApp, Game } from "../game";
 
 class DebugPage extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,11 @@ class DebugPage extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     render() {
-        return <WebApp debug={true} />;
+        return (
+            <WebApp>
+                <Game debug={true} />
+            </WebApp>
+        );
     }
 
     ////////////////////////////////////////////////////////////////////////////

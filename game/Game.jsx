@@ -43,6 +43,7 @@ const _DefaultState = {
     playerFaceAttributes: {},
     lastInputEmotion: EMOTION_CONTENT,
     startedSmilingAt: null,
+    multipleFacesDetected: false,
     cameraReady: false,
     particlesReady: true
 };
@@ -76,6 +77,19 @@ const CSS = css`
     .emoji {
         display: block;
         transition: opacity 0.35s linear, transform 0.2s linear;
+    }
+
+    .multi-face-warning {
+        color: red;
+        font-size: 50px;
+        text-align: center;
+        position: absolute;
+        bottom: 10vh;
+        border: 5px dashed red;
+        background-color: white;
+        padding: 1vh;
+        width: 60vw;
+        left: 20vw;
     }
 
     ::selection {
@@ -249,6 +263,23 @@ class Game extends React.Component {
         });
     }
 
+    handleMultipleFaces() {
+        if (this._multipleFacesInterval) {
+            clearInterval(this._multipleFacesInterval);
+        }
+
+        this.setState({
+            multipleFacesDetected: true
+        });
+
+        this._multipleFacesInterval = setTimeout(() => {
+            this._multipleFacesInterval = null;
+            this.setState({
+                multipleFacesDetected: false
+            });
+        }, 2500);
+    }
+
     handleCameraReady() {
         this.setState({
             cameraReady: true
@@ -320,7 +351,6 @@ class Game extends React.Component {
     }
 
     handleScorePoints(howMany) {
-        debugger;
         this.setState({
             points: this.state.points + howMany
         });
@@ -340,6 +370,7 @@ class Game extends React.Component {
             mode,
             level,
             lastInputEmotion,
+            multipleFacesDetected,
             points
         } = this.state;
 
@@ -393,18 +424,15 @@ class Game extends React.Component {
                     {CSS}
                 </style>
 
-                <Head>
-                    <title>Computas Emoji Game!</title>
-                    <meta name="viewport" content="initial-scale=1.0, width=device-width" />
-                    <link href="https://fonts.googleapis.com/css?family=Roboto:400,500,700,900" rel="stylesheet" />
-                    <script src="/static/lib/proton.min.js" />
-                </Head>
-
                 <LevelProgressBar
                     secondsLeft={level ? level.secondsLeftOfGame || null : null}
                     level={level ? level.no : 0}
                     secondsTotal={GAME_LENGTH_IN_SECONDS}
                 />
+
+                {multipleFacesDetected ? (
+                    <div className="multi-face-warning">Only one player can look at the camera at the time</div>
+                ) : null}
 
                 <FaceProvider value={playerFaceAttributes}>
                     {level ? <ScoreDisplay score={points} /> : null}
@@ -423,6 +451,7 @@ class Game extends React.Component {
                             debug={debug}
                             onInputEmotion={this.handleInputEmotion.bind(this)}
                             onFaceAttributesChanged={this.handleFaceAttributesChanged.bind(this)}
+                            onMultipleFacesDetected={this.handleMultipleFaces.bind(this)}
                             onCameraReady={this.handleCameraReady.bind(this)}
                         />
                     </div>

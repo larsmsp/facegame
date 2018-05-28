@@ -2,6 +2,7 @@ import React from "react";
 import Head from "next/head";
 import css from "styled-jsx/css";
 import { Game } from "../game";
+import { resetUniqueIds } from "react-html-id";
 
 const CSS = css`
     html,
@@ -23,6 +24,10 @@ class WebApp extends React.Component {
     // Component lifecycle
     ////////////////////////////////////////////////////////////////////////////
 
+    componentWillMount() {
+        resetUniqueIds();
+    }
+
     ////////////////////////////////////////////////////////////////////////////
     // Render
     ////////////////////////////////////////////////////////////////////////////
@@ -41,7 +46,7 @@ class WebApp extends React.Component {
                     <script src="/static/lib/proton.min.js" />
                 </Head>
 
-                <Game debug={this.props.debug} />
+                {this.props.children}
             </div>
         );
     }

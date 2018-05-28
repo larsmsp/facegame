@@ -1,5 +1,5 @@
 import React from "react";
-import { WebApp } from "../game";
+import { Game, WebApp } from "../game";
 
 class IndexPage extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
@@ -11,7 +11,11 @@ class IndexPage extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     render() {
-        return <WebApp debug={false} />;
+        return (
+            <WebApp>
+                <Game debug={false} />
+            </WebApp>
+        );
     }
 
     ////////////////////////////////////////////////////////////////////////////

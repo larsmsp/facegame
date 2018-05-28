@@ -3,6 +3,7 @@ import React from "react";
 import css from "styled-jsx/css";
 import { DateTime } from "luxon";
 import { EMOTION_CONTENT, EMOTION_ANGRY, EMOTION_SAD, EMOTION_HAPPY, EMOTION_SUPRISED } from "../game";
+import { getSetting, SETTING_RECRUITMENT_TEXT } from "../util/Settings.js";
 
 const _DefaultState = {
     lastInputAt: DateTime.local(),
@@ -124,7 +125,7 @@ class SceneWaitingToStart extends React.Component {
                     <img className="google" src="/static/image/google-logo.png" /> Cloud Vision
                 </p>
 
-                <p className="pitch">PS. We're hiring!</p>
+                <p className="pitch">{getSetting(SETTING_RECRUITMENT_TEXT)}</p>
             </div>
         );
     }
