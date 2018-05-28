@@ -439,9 +439,9 @@ class Game extends React.Component {
 
                         {main}
 
-                        {mode === MODE_FINISHED || mode === MODE_PLAYING_LEVEL ? (
+                        <a href="/admin">
                             <img className="banner-logo" src="/static/image/logo-banner.png" />
-                        ) : null}
+                        </a>
 
                         <WebcamCapture
                             ref="camera"

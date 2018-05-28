@@ -60,6 +60,14 @@ const CSS = css`
         padding: 10px 30px;
         display: block;
     }
+
+    .save-button {
+        background-color: green;
+    }
+
+    .delete-button {
+        background-color: #ff6666;
+    }
 `;
 
 class AdminPage extends React.Component {
@@ -72,7 +80,7 @@ class AdminPage extends React.Component {
         this.state = {
             ..._DefaultState,
             catchphraseText: getSetting(SETTING_CATCHPHRASE),
-            hiringText: getSetting(SETTING_RECRUITMENT_TEXT),
+            recruitmentText: getSetting(SETTING_RECRUITMENT_TEXT),
             pictureQuality: getSetting(SETTING_PICTURE_QUALITY),
             pictureFrequency: getSetting(SETTING_STARTING_PICTURE_FREQUENCY)
         };
@@ -108,8 +116,22 @@ class AdminPage extends React.Component {
     }
 
     handleSave(event) {
+        setSetting(SETTING_CATCHPHRASE, this.state.catchphraseText);
+        setSetting(SETTING_RECRUITMENT_TEXT, this.state.recruitmentText);
+        setSetting(SETTING_PICTURE_QUALITY, Math.max(10, Math.min(90, parseInt(this.state.pictureQuality, 10))));
+        setSetting(
+            SETTING_STARTING_PICTURE_FREQUENCY,
+            Math.max(100, Math.min(5000, parseInt(this.state.pictureFrequency, 10)))
+        );
+
         // Do something
         window.location.pathname = "/";
+    }
+
+    handleDeleteHighscores(event) {
+        if (confirm("Delete highscores? This cannot be undone")) {
+            // Do it!
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -117,7 +139,7 @@ class AdminPage extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     render() {
-        const { camerasAvailable, catchphraseText, hiringText, pictureQuality, pictureFrequency } = this.state;
+        const { camerasAvailable, catchphraseText, recruitmentText, pictureQuality, pictureFrequency } = this.state;
         console.log(catchphraseText);
         return (
             <WebApp>
@@ -148,20 +170,22 @@ class AdminPage extends React.Component {
 
                     <div className="control-group">
                         <label htmlFor={this.nextUniqueId()}>Hiring text</label>
-                        <span className="help">(shown under Computas + Google cloud text)</span>
+                        <div className="help">(shown under Computas + Google cloud text)</div>
                         <input
                             type="text"
                             id={this.lastUniqueId()}
-                            name="hiringText"
-                            value={hiringText}
+                            name="recruitmentText"
+                            value={recruitmentText}
                             onChange={this.handleInputChanged.bind(this)}
                         />
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>
-                            Picture quality (between 10 and 90), use lower if network is bad
-                        </label>
+                        <label htmlFor={this.nextUniqueId()}>Picture quality (between 10 and 90)</label>
+                        <div className="help">
+                            Higher value improves accuracy of the game, but requires more network, default is 75 (good
+                            mix between accuracy and bandwidth). Use a lower value if the network is bad.
+                        </div>
                         <input
                             type="text"
                             id={this.lastUniqueId()}
@@ -172,11 +196,12 @@ class AdminPage extends React.Component {
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>Picture frequency is milliseconds</label>
-                        <span className="help">
-                            (how often to capture pictures, lower delay improves responsiveness of game, but requires
-                            more network traffic)
-                        </span>
+                        <label htmlFor={this.nextUniqueId()}>Picture frequency in milliseconds</label>
+                        <div className="help">
+                            How often to capture pictures, lower delay improves responsiveness of game, but requires
+                            more network traffic.
+                        </div>
+
                         <input
                             type="text"
                             id={this.lastUniqueId()}
@@ -189,6 +214,9 @@ class AdminPage extends React.Component {
                     <div className="">
                         <button className="save-button" onClick={this.handleSave.bind(this)}>
                             Save and return to main screen
+                        </button>
+                        <button className="delete-button" onClick={this.handleDeleteHighscores.bind(this)}>
+                            Delete all highscores
                         </button>
                     </div>
                 </div>

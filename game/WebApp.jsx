@@ -3,6 +3,7 @@ import Head from "next/head";
 import css from "styled-jsx/css";
 import { Game } from "../game";
 import { resetUniqueIds } from "react-html-id";
+import * as _ from "lodash";
 
 const CSS = css`
     html,
@@ -26,6 +27,16 @@ class WebApp extends React.Component {
 
     componentWillMount() {
         resetUniqueIds();
+
+        if (process.browser) {
+            // Always reload the page after the window is resized, many calculations in the game depend on window size being the same
+            window.addEventListener(
+                "resize",
+                _.debounce(() => {
+                    window.location.reload();
+                }, 1000)
+            );
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
