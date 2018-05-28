@@ -263,18 +263,18 @@ class SceneLevel extends React.Component {
         };
     }
 
-    _killAllEmojis(emotionToKill = "") {
+    _killAllEmojis(emotionToKill = "", shouldGivePoints = true) {
         let emojis = [...this.state.emojis];
         let killCount = 0;
         if (emotionToKill === "") {
             killCount = emojis.filter(e => !e.dead).length;
-            emojis = emojis.map(this._killEmoji.bind(this));
+            emojis = emojis.map((e, i) => this._killEmoji(e, i, shouldGivePoints));
         } else {
             // Kill specific type
             emojis = emojis.map((e, emojiIndex) => {
                 if (e.emotion === emotionToKill && !e.dead) {
                     killCount++;
-                    return this._killEmoji(e, emojiIndex);
+                    return this._killEmoji(e, emojiIndex, shouldGivePoints);
                 }
 
                 return e;
@@ -288,7 +288,7 @@ class SceneLevel extends React.Component {
         return killCount;
     }
 
-    _killEmoji(emoji, emojiIndex) {
+    _killEmoji(emoji, emojiIndex, shouldGivePoints) {
         if (!emoji.dead) {
             const node = document.getElementById("e-" + emojiIndex);
             this.props.onParticleEffect(node.offsetLeft, node.offsetTop);

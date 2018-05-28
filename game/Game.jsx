@@ -241,9 +241,7 @@ class Game extends React.Component {
                     ...this.state.level,
                     no: nextLevel,
                     secondsLeftOfLevel: LEVEL_MAX_LENGTH_IN_SECONDS
-                },
-                // Reset input when new level starts
-                lastInputEmotion: ""
+                }
             });
         }, 100);
     }
@@ -288,6 +286,7 @@ class Game extends React.Component {
     }
 
     handleScorePoints(howMany) {
+        debugger;
         this.setState({
             points: this.state.points + howMany
         });

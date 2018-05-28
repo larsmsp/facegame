@@ -357,9 +357,12 @@ class WebcamCapture extends React.Component {
                 .catch(err => alert(err));
         };
 
+        // TODO: Allow selection of input device
         navigator.mediaDevices.enumerateDevices().then(function(devices) {
             devices.forEach(function(device) {
-                console.log(device.kind + ": " + device.label + " id = " + device.deviceId);
+                if (device.kind === "videoinput") {
+                    console.log(device.label + " id = " + device.deviceId);
+                }
             });
         });
 
