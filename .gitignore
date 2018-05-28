@@ -2,3 +2,4 @@ node_modules
 .next
 out
 vision-service-account.json
+yarn-error.log

@@ -2,6 +2,7 @@ import Emoji from "../components/Emoji";
 import DebugControls from "../components/DebugControls";
 import React from "react";
 import css from "styled-jsx/css";
+import { DateTime } from "luxon";
 import { ALL_EMOTIONS, EMOTION_CONTENT } from ".";
 import uuidv4 from "uuid/v4";
 import { getSetting, SETTING_PICTURE_QUALITY, SETTING_STARTING_PICTURE_FREQUENCY } from "../util/Settings.js";
@@ -17,6 +18,7 @@ const _DefaultState = {
     faceBoundingBox: null,
     headwearLikelihood: 0,
     totalImageSize: 0,
+    startedCaptureAt: null,
     lastInputAt: null
 };
 
@@ -27,8 +29,8 @@ const CSS = css`
     .video-area video,
     .video-area .last-capture {
         position: absolute;
-        width: 15vw;
-        height: 15vh;
+        width: 20vh;
+        height: 20vh;
         left: 0;
         bottom: 0;
         z-index: 5;
@@ -45,7 +47,7 @@ const CSS = css`
 
     .video-area .status {
         position: absolute;
-        left: 16vw;
+        left: 21vh;
         bottom: 0.5vh;
         font-size: 10px;
         font-family: monospace;
@@ -224,11 +226,20 @@ class WebcamCapture extends React.Component {
         }
 
         if (badStatus.length === 0) {
+            const { totalImageSize, startedCaptureAt } = this.state;
+
+            // Calculate how much data we use per hour
+            let consumptionByHour = 0;
+            if (startedCaptureAt) {
+                const runningFor = DateTime.local().diff(this.state.startedCaptureAt).milliseconds / 1000;
+                consumptionByHour = 3600 * (totalImageSize / runningFor);
+            }
+
             return (
                 <div className="status">
                     <p className="good">
-                        Latency {this.state.latency} ms, {this._formatBytesReadable(this.state.totalImageSize)},{" "}
-                        {this.state.headwearLikelihood.toFixed(2)}
+                        Latency &Delta;{(this._initialCaptureInterval() * 0.5 + this.state.latency * 0.5).toFixed()} +{" "}
+                        {this.state.latency} ms, {this._formatBytesReadable(consumptionByHour)}/h
                     </p>
                 </div>
             );
@@ -255,7 +266,11 @@ class WebcamCapture extends React.Component {
                 </style>
 
                 <video ref="videoElement" style={{ opacity: detectedEmotion === "" ? 1 : 0 }} />
-                <canvas ref="mugshotCanvas" className="last-capture" width={400} height={250} />
+                <canvas
+                    ref="mugshotCanvas"
+                    className="last-capture"
+                    style={{ opacity: detectedEmotion === "" ? 0 : 1 }}
+                />
 
                 <Emoji emotion={detectedEmotion} />
 
@@ -298,16 +313,19 @@ class WebcamCapture extends React.Component {
 
         // Create context if this is first capture
         if (!this._mugshotContext) {
+            mugshotCanvas.width = mugshotCanvas.clientWidth;
+            mugshotCanvas.height = mugshotCanvas.clientHeight;
             this._mugshotContext = mugshotCanvas.getContext("2d");
         }
 
         // If we got face crop coordinates, use that to extract the face and update state
         if (faceBoundingBox) {
-            // Draw again, but this time only from the bounding box
-            const faceWidth = faceBoundingBox[1].x - faceBoundingBox[0].x;
-            const faceHeight = faceBoundingBox[2].y - faceBoundingBox[1].y;
+            const outputAspectRatio = mugshotCanvas.clientWidth / mugshotCanvas.clientHeight;
 
-            // TODO: Crop in same aspect ratio as the display
+            // Draw again, but this time only from the bounding box
+            let faceWidth = faceBoundingBox[1].x - faceBoundingBox[0].x;
+            let faceHeight = faceBoundingBox[2].y - faceBoundingBox[1].y;
+            const faceAspectRatio = faceWidth / faceHeight;
 
             this._mugshotContext.drawImage(
                 videoElement,
@@ -419,6 +437,7 @@ class WebcamCapture extends React.Component {
         this._socket.send(JSON.stringify(msg));
 
         const rescheduleIn = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;
+        console.log(`Next capture in ${rescheduleIn} ms`);
         setTimeout(this._captureAndRecognize.bind(this), rescheduleIn);
     }
 
@@ -426,6 +445,9 @@ class WebcamCapture extends React.Component {
         const { videoElement, captureCanvas } = this.refs;
 
         let _startWebcam = stream => {
+            this.setState({
+                startedCaptureAt: DateTime.local()
+            });
             videoElement.srcObject = stream;
             videoElement
                 .play()
