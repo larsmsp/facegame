@@ -4,6 +4,7 @@ import React from "react";
 import css from "styled-jsx/css";
 import { ALL_EMOTIONS, EMOTION_CONTENT } from ".";
 import uuidv4 from "uuid/v4";
+import { getSetting, SETTING_PICTURE_QUALITY, SETTING_STARTING_PICTURE_FREQUENCY } from "../util/Settings.js";
 
 const _DefaultState = {
     socketReady: false,
@@ -13,13 +14,12 @@ const _DefaultState = {
     videoWidth: 0,
     videoHeight: 0,
     latency: 0,
+    faceBoundingBox: null,
     headwearLikelihood: 0,
     totalImageSize: 0,
     lastInputAt: null
 };
 
-const INITIAL_CAPTURE_INTERVAL = 700;
-const CAPTURE_QUALITY = 0.5; // Between 0 and 1
 const HEADWEAR_DETECTION_THRESHOLD = 0.12;
 const IDLE_TIMEOUT = 0;
 
@@ -58,10 +58,6 @@ const CSS = css`
     .video-area .status .good {
         color: green;
     }
-
-    .video-area canvas {
-        visibility: hidden;
-    }
 `;
 
 class WebcamCapture extends React.Component {
@@ -88,7 +84,10 @@ class WebcamCapture extends React.Component {
     componentDidUpdate(prevProps, prevState) {
         if (prevState.cameraReady === false || prevState.socketReady === false) {
             if (this.state.cameraReady && this.state.socketReady) {
-                this._captureInterval = setTimeout(this._captureAndRecognize.bind(this), INITIAL_CAPTURE_INTERVAL);
+                this._captureInterval = setTimeout(
+                    this._captureAndRecognize.bind(this),
+                    this._initialCaptureInterval()
+                );
             }
         }
 
@@ -129,7 +128,9 @@ class WebcamCapture extends React.Component {
         }
         this._idleInputTimer = setTimeout(this.handleFaceDisappeared.bind(this), 5000);
 
-        this.props.onInputEmotion(emotion, this._captureImage());
+        this._updateMugshot();
+        const mugshot = this._captureMugshot();
+        this.props.onInputEmotion(emotion, mugshot);
     }
 
     handleFaceDisappeared() {
@@ -186,13 +187,20 @@ class WebcamCapture extends React.Component {
 
                     const captureTime = new Date(packet.captureTime);
                     const now = new Date();
+
                     this.setState({
                         latency: now.getTime() - captureTime.getTime(),
+                        faceBoundingBox: face.boundingBox,
                         // Floating average of headwear likelihood
                         headwearLikelihood: this.state.headwearLikelihood * 0.7 + face.headwear * 0.3
                     });
 
                     this.handleInputEmotion(topEmotion.emotion);
+                } else {
+                    // Remove detected bounding box
+                    this.setState({
+                        faceBoundingBox: null
+                    });
                 }
                 break;
 
@@ -219,7 +227,7 @@ class WebcamCapture extends React.Component {
             return (
                 <div className="status">
                     <p className="good">
-                        Latency {this.state.latency} ms, {(this.state.totalImageSize / 1024).toFixed(0) + " KB"},{" "}
+                        Latency {this.state.latency} ms, {this._formatBytesReadable(this.state.totalImageSize)},{" "}
                         {this.state.headwearLikelihood.toFixed(2)}
                     </p>
                 </div>
@@ -247,17 +255,13 @@ class WebcamCapture extends React.Component {
                 </style>
 
                 <video ref="videoElement" style={{ opacity: detectedEmotion === "" ? 1 : 0 }} />
-                <img
-                    className="last-capture"
-                    src={lastCapturedImageUrl}
-                    style={{ opacity: detectedEmotion === "" ? 0 : 1 }}
-                />
+                <canvas ref="mugshotCanvas" className="last-capture" width={400} height={250} />
 
                 <Emoji emotion={detectedEmotion} />
 
                 {this.renderStatus()}
 
-                <canvas ref="captureCanvas" />
+                <canvas ref="captureCanvas" style={{ visibility: "hidden" }} />
 
                 {debug ? <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)} /> : null}
             </div>
@@ -283,13 +287,57 @@ class WebcamCapture extends React.Component {
             });
         }
 
+        // Draw to an invisible canvas and convert to base64
         this._canvasContext.drawImage(videoElement, 0, 0, videoElement.videoWidth, videoElement.videoHeight);
-        const mugshot = this._canvasContext.canvas.toDataURL("image/jpeg", CAPTURE_QUALITY);
-        this.setState({
-            lastCapturedImageUrl: mugshot
-        });
+        return captureCanvas.toDataURL("image/jpeg", this._captureQuality());
+    }
 
-        return mugshot;
+    _updateMugshot() {
+        const { mugshotCanvas, videoElement } = this.refs;
+        const { faceBoundingBox } = this.state;
+
+        // Create context if this is first capture
+        if (!this._mugshotContext) {
+            this._mugshotContext = mugshotCanvas.getContext("2d");
+        }
+
+        // If we got face crop coordinates, use that to extract the face and update state
+        if (faceBoundingBox) {
+            // Draw again, but this time only from the bounding box
+            const faceWidth = faceBoundingBox[1].x - faceBoundingBox[0].x;
+            const faceHeight = faceBoundingBox[2].y - faceBoundingBox[1].y;
+
+            // TODO: Crop in same aspect ratio as the display
+
+            this._mugshotContext.drawImage(
+                videoElement,
+                faceBoundingBox[0].x,
+                faceBoundingBox[0].y,
+                faceWidth,
+                faceHeight,
+                0,
+                0,
+                mugshotCanvas.width,
+                mugshotCanvas.height
+            );
+        } else {
+            // Else just render the entire video
+            this._mugshotContext.drawImage(
+                videoElement,
+                0,
+                0,
+                videoElement.videoWidth,
+                videoElement.videoHeight,
+                0,
+                0,
+                mugshotCanvas.width,
+                mugshotCanvas.height
+            );
+        }
+    }
+
+    _captureMugshot() {
+        return this.refs.mugshotCanvas.toDataURL("image/jpeg", this._captureQuality());
     }
 
     _stopWebsocketConnection(updateState = true) {
@@ -370,7 +418,7 @@ class WebcamCapture extends React.Component {
 
         this._socket.send(JSON.stringify(msg));
 
-        const rescheduleIn = this.state.latency * 0.5 + INITIAL_CAPTURE_INTERVAL * 0.5;
+        const rescheduleIn = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;
         setTimeout(this._captureAndRecognize.bind(this), rescheduleIn);
     }
 
@@ -414,6 +462,25 @@ class WebcamCapture extends React.Component {
                 alert("You must grant video access for the game to work.\n\n" + error.code);
             }
         );
+    }
+
+    _formatBytesReadable(bytes) {
+        if (bytes > 1024 * 1024) {
+            return (bytes / 1024 / 1024).toFixed(1) + " MB";
+        }
+        if (bytes > 1024) {
+            return (bytes / 1024).toFixed(1) + " KB";
+        }
+
+        return bytes + " bytes";
+    }
+
+    _initialCaptureInterval() {
+        return parseInt(getSetting(SETTING_STARTING_PICTURE_FREQUENCY), 10);
+    }
+
+    _captureQuality() {
+        return parseInt(getSetting(SETTING_PICTURE_QUALITY)) / 100;
     }
 }
 

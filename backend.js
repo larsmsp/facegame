@@ -35,19 +35,6 @@ const wss = new WebSocket.Server({
     }
 });
 
-function sendRecognitionResponse(socket, request) {
-    detectFaces(request.image, (err, result) => {
-        const packet = {
-            type: "RecognitionResult",
-            tag: request.tag,
-            captureTime: request.captureTime,
-            faces: result
-        };
-
-        socket.send(JSON.stringify(packet));
-    });
-}
-
 function googleLikelihoodToNumber(likelyhood) {
     switch (likelyhood) {
         case "VERY_LIKELY":
@@ -65,24 +52,49 @@ function googleLikelihoodToNumber(likelyhood) {
     }
 }
 
-function detectFaces(image, callback) {
+function performFaceDetection(request, sendPacket) {
     // Make a call to the Vision API to detect the faces
-    const request = { image: { content: image.dataBase64 } };
     googleVisionClient
-        .faceDetection(request)
+        .faceDetection({ image: { content: request.image.dataBase64 } })
         .then(results => {
             const faces = results[0].faceAnnotations;
             var numFaces = faces.length;
+            const faceId = uuidv4();
             console.log("Found " + numFaces + (numFaces === 1 ? " face" : " faces"));
 
+            // Crop out the first face
             if (numFaces > 0) {
                 // console.dir(faces[0]);
+                /*
+                WAAAY to much work to clip images in node, man.
+                Clipper(image.dataBase64, function() {
+                    this.crop(200, 200, 200, 200)
+                        .resize(128, 128)
+                        .quality(80)
+                        .toDataUrl(dataUrl => {
+                            sendPacket({
+                                type: "FaceCrop",
+                                tag: request.tag,
+                                captureTime: request.captureTime,
+                                faces: [
+                                    {
+                                        id: faceId,
+                                        base64Image: dataUrl
+                                    }
+                                ]
+                            });
+                        });
+                });
+                */
             }
 
-            callback(
-                null,
-                faces.map(face => {
+            sendPacket({
+                type: "RecognitionResult",
+                tag: request.tag,
+                captureTime: request.captureTime,
+                faces: faces.map(face => {
                     return {
+                        id: faceId,
                         emotion: {
                             Happy: googleLikelihoodToNumber(face.joyLikelihood),
                             Sad: googleLikelihoodToNumber(face.sorrowLikelihood),
@@ -90,12 +102,12 @@ function detectFaces(image, callback) {
                             Suprised: googleLikelihoodToNumber(face.surpriseLikelihood),
                             Content: 0.1 // Client will pick most likely, which will be this if the others have low detection value
                         },
-                        boundingBox: face.boundingPoly,
+                        boundingBox: face.boundingPoly.vertices,
                         headwear: googleLikelihoodToNumber(face.headwearLikelihood),
                         faceAttributes: face
                     };
                 })
-            );
+            });
         })
         .catch(err => {
             console.error("ERROR:", err);
@@ -113,11 +125,16 @@ wss.on("connection", function connection(socket) {
                 const image = imageDataURI.decode(packet.imageBase64);
 
                 // imageDataURI.outputFile(packet.imageBase64, "tmp-captures/faceimage-" + new Date().getTime() + ".jpg");
-                sendRecognitionResponse(socket, {
-                    image,
-                    tag: packet.tag,
-                    captureTime: packet.captureTime
-                });
+                performFaceDetection(
+                    {
+                        image: image,
+                        tag: packet.tag,
+                        captureTime: packet.captureTime
+                    },
+                    packet => {
+                        socket.send(JSON.stringify(packet));
+                    }
+                );
                 break;
 
             default:

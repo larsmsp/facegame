@@ -216,7 +216,6 @@ class Game extends React.Component {
             case MODE_WAITING_TO_START:
                 if (emotion === EMOTION_HAPPY) {
                     if (this.state.startedSmilingAt === null) {
-                        console.log("User started smiling");
                         this.setState({
                             startedSmilingAt: DateTime.local(),
                             hasBeenSmilingFor: 0.0
@@ -226,7 +225,6 @@ class Game extends React.Component {
                             this.state.hasBeenSmilingFor +
                             DateTime.local().diff(this.state.startedSmilingAt).milliseconds;
 
-                        console.log("User has been smiling for " + millisecondsSmiling);
                         if (millisecondsSmiling > SMILE_FOR_SECONDS_TO_START * 1000) {
                             this.handleStartGame(mugshot);
                         } else {
@@ -236,7 +234,6 @@ class Game extends React.Component {
                         }
                     }
                 } else {
-                    console.log("User stopped smiling");
                     this.setState({
                         startedSmilingAt: null,
                         hasBeenSmilingFor: 0
