@@ -5,7 +5,9 @@ const uuidv4 = require("uuid/v4");
 const GoogleVision = require("@google-cloud/vision");
 
 // Creates a client
-const googleVisionClient = new GoogleVision.ImageAnnotatorClient();
+const googleVisionClient = new GoogleVision.ImageAnnotatorClient({
+    keyFilename: "vision-service-account.json"
+});
 
 const PORT = 4001;
 
@@ -52,6 +54,8 @@ function googleLikelihoodToNumber(likelyhood) {
             return 1;
         case "LIKELY":
             return 0.75;
+        case "POSSIBLE":
+            return 0.5;
         case "UNLIKELY":
             return 0.25;
         case "VERY_UNLIKELY":
@@ -72,7 +76,7 @@ function detectFaces(image, callback) {
             console.log("Found " + numFaces + (numFaces === 1 ? " face" : " faces"));
 
             if (numFaces > 0) {
-                console.dir(faces[0]);
+                // console.dir(faces[0]);
             }
 
             callback(
@@ -87,6 +91,7 @@ function detectFaces(image, callback) {
                             Content: 0.1 // Client will pick most likely, which will be this if the others have low detection value
                         },
                         boundingBox: face.boundingPoly,
+                        headwear: googleLikelihoodToNumber(face.headwearLikelihood),
                         faceAttributes: face
                     };
                 })

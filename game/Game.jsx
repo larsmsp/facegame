@@ -1,4 +1,5 @@
 import ParticleArea from "../components/ParticleArea";
+import { FaceProvider } from "../components/FaceAttributes";
 import Emoji from "../components/Emoji";
 import LevelProgressBar from "../components/LevelProgressBar";
 import React from "react";
@@ -14,7 +15,8 @@ import {
     LEVEL_MAX_LENGTH_IN_SECONDS,
     SCREENSAVE_AFTER_SECONDS,
     RELOAD_AFTER_SECONDS,
-    CONGRATS_SCREEN_SHOWN_FOR_SECONDS
+    CONGRATS_SCREEN_SHOWN_FOR_SECONDS,
+    SMILE_FOR_SECONDS_TO_START
 } from "./Constants";
 import SceneFinished from "./SceneFinished";
 import SceneLevel from "./SceneLevel";
@@ -38,9 +40,9 @@ const _DefaultState = {
     level: null,
     points: 0,
     playerImageUrl: null,
+    playerFaceAttributes: {},
     lastInputEmotion: EMOTION_CONTENT,
-    lastInputAt: DateTime.local(),
-    gameFinishedAt: DateTime.local(),
+    startedSmilingAt: null,
     cameraReady: false,
     particlesReady: true
 };
@@ -130,9 +132,14 @@ class Game extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     handleGameTick() {
+        let secondsSinceLastInput = 0;
+        const { lastInputAt } = this.state;
+        if (lastInputAt) {
+            secondsSinceLastInput = DateTime.local().diff(lastInputAt).milliseconds;
+        }
+
         switch (this.state.mode) {
             case MODE_SCREENSAVER: {
-                const secondsSinceLastInput = DateTime.local().diff(this.state.lastInputAt).milliseconds;
                 if (secondsSinceLastInput > RELOAD_AFTER_SECONDS * 1000) {
                     window.localStorage.setItem(LOCAL_STORAGE_RESUME_KEY, "true");
                     document.location.reload();
@@ -141,7 +148,6 @@ class Game extends React.Component {
             }
 
             case MODE_WAITING_TO_START: {
-                const secondsSinceLastInput = DateTime.local().diff(this.state.lastInputAt).milliseconds;
                 if (secondsSinceLastInput > SCREENSAVE_AFTER_SECONDS * 1000) {
                     // Go to screensaver
                     this.setState({
@@ -195,18 +201,40 @@ class Game extends React.Component {
 
             case MODE_WAITING_TO_START:
                 if (emotion === EMOTION_HAPPY) {
-                    this.handleStartGame(mugshot);
+                    if (this.state.startedSmilingAt === null) {
+                        console.log("User started smiling");
+                        this.setState({
+                            startedSmilingAt: DateTime.local(),
+                            hasBeenSmilingFor: 0.0
+                        });
+                    } else {
+                        const millisecondsSmiling =
+                            this.state.hasBeenSmilingFor +
+                            DateTime.local().diff(this.state.startedSmilingAt).milliseconds;
+
+                        console.log("User has been smiling for " + millisecondsSmiling);
+                        if (millisecondsSmiling > SMILE_FOR_SECONDS_TO_START * 1000) {
+                            this.handleStartGame(mugshot);
+                        } else {
+                            this.setState({
+                                hasBeenSmilingFor: millisecondsSmiling
+                            });
+                        }
+                    }
+                } else {
+                    console.log("User stopped smiling");
+                    this.setState({
+                        startedSmilingAt: null,
+                        hasBeenSmilingFor: 0
+                    });
                 }
                 break;
 
             case MODE_PLAYING_LEVEL:
-                const secondsSinceFinished = DateTime.local().diff(this.state.gameFinishedAt).milliseconds;
-                if (secondsSinceFinished > 5) {
-                    if (this.state.lastInputEmotion !== emotion) {
-                        this.setState({
-                            lastInputEmotion: emotion
-                        });
-                    }
+                if (this.state.lastInputEmotion !== emotion) {
+                    this.setState({
+                        lastInputEmotion: emotion
+                    });
                 }
 
                 break;
@@ -215,15 +243,21 @@ class Game extends React.Component {
         }
     }
 
+    handleFaceAttributesChanged(attributes) {
+        this.setState({
+            playerFaceAttributes: attributes
+        });
+    }
+
     handleCameraReady() {
         this.setState({
             cameraReady: true
         });
     }
 
-    handleParticleEffect(x, y) {
+    handleParticleEffect(x, y, particleEffect) {
         let particleAccelerator = this.refs.particleArea;
-        particleAccelerator.createExplosion(x, y);
+        particleAccelerator.createExplosion(x, y, particleEffect);
     }
 
     handleLevelComplete() {
@@ -247,7 +281,7 @@ class Game extends React.Component {
     }
 
     handleStartGame(mugshot) {
-        this.refs.particleArea.createExplosion(0, 0);
+        this.refs.particleArea.createExplosion(0, 0, "pop");
 
         this.setState({
             mode: MODE_PLAYING_LEVEL,
@@ -258,8 +292,7 @@ class Game extends React.Component {
                 secondsLeftOfGame: GAME_LENGTH_IN_SECONDS,
                 secondsLeftOfLevel: LEVEL_MAX_LENGTH_IN_SECONDS,
                 no: 1
-            },
-            lastInputEmotion: ""
+            }
         });
     }
 
@@ -272,15 +305,16 @@ class Game extends React.Component {
             mode: MODE_FINISHED,
             level: null,
             // Make it so outro is not interrupted immdiately by screensaver
-            lastInputAt: DateTime.local().plus({ seconds: 10 })
+            lastInputAt: DateTime.local().plus({ seconds: 10 }),
+            startedSmilingAt: null,
+            hasBeenSmilingFor: 0
         });
 
         // Reset game after 5s
         setTimeout(() => {
             this.setState({
                 mode: MODE_WAITING_TO_START,
-                playerImageUrl: null,
-                gameFinishedAt: DateTime.local()
+                playerImageUrl: null
             });
         }, CONGRATS_SCREEN_SHOWN_FOR_SECONDS * 1000);
     }
@@ -298,7 +332,16 @@ class Game extends React.Component {
 
     render() {
         const { debug } = this.props;
-        const { cameraReady, particlesReady, playerImageUrl, mode, level, lastInputEmotion, points } = this.state;
+        const {
+            cameraReady,
+            particlesReady,
+            playerImageUrl,
+            playerFaceAttributes,
+            mode,
+            level,
+            lastInputEmotion,
+            points
+        } = this.state;
 
         let main = null;
         let backgroundEffect = null;
@@ -313,7 +356,12 @@ class Game extends React.Component {
                 break;
 
             case MODE_WAITING_TO_START:
-                main = <SceneWaitingToStart />;
+                main = (
+                    <SceneWaitingToStart
+                        lastInputEmotion={lastInputEmotion}
+                        onStartGame={this.handleStartGame.bind(this)}
+                    />
+                );
                 backgroundEffect = "bubbles";
                 break;
 
@@ -358,24 +406,27 @@ class Game extends React.Component {
                     secondsTotal={GAME_LENGTH_IN_SECONDS}
                 />
 
-                {level ? <ScoreDisplay score={points} /> : null}
+                <FaceProvider value={playerFaceAttributes}>
+                    {level ? <ScoreDisplay score={points} /> : null}
 
-                <div className="game">
-                    {particlesReady ? <ParticleArea ref="particleArea" effect={backgroundEffect} /> : null}
+                    <div className="game">
+                        {particlesReady ? <ParticleArea ref="particleArea" effect={backgroundEffect} /> : null}
 
-                    {main}
+                        {main}
 
-                    {mode === MODE_FINISHED || mode === MODE_PLAYING_LEVEL ? (
-                        <img className="banner-logo" src="/static/image/logo-banner.png" />
-                    ) : null}
+                        {mode === MODE_FINISHED || mode === MODE_PLAYING_LEVEL ? (
+                            <img className="banner-logo" src="/static/image/logo-banner.png" />
+                        ) : null}
 
-                    <WebcamCapture
-                        ref="camera"
-                        debug={debug}
-                        onInputEmotion={this.handleInputEmotion.bind(this)}
-                        onCameraReady={this.handleCameraReady.bind(this)}
-                    />
-                </div>
+                        <WebcamCapture
+                            ref="camera"
+                            debug={debug}
+                            onInputEmotion={this.handleInputEmotion.bind(this)}
+                            onFaceAttributesChanged={this.handleFaceAttributesChanged.bind(this)}
+                            onCameraReady={this.handleCameraReady.bind(this)}
+                        />
+                    </div>
+                </FaceProvider>
             </div>
         );
     }

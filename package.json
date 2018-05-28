@@ -1,6 +1,8 @@
 {
     "scripts": {
-        "dev": "next -p 4000",
+        "dev": "npm-run-all --parallel dev:*",
+        "dev:backend": "node backend.js",
+        "dev:frontend": "next -p 4000",
         "build": "next build && next export",
         "start": "next start"
     },
