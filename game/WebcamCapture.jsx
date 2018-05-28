@@ -19,7 +19,7 @@ const _DefaultState = {
 };
 
 const INITIAL_CAPTURE_INTERVAL = 700;
-const CAPTURE_QUALITY = 0.2; // Between 0 and 1
+const CAPTURE_QUALITY = 0.5; // Between 0 and 1
 const HEADWEAR_DETECTION_THRESHOLD = 0.12;
 const IDLE_TIMEOUT = 0;
 
