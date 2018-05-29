@@ -56,7 +56,7 @@ class SceneLevel extends React.Component {
         if (this.props.lastInputEmotion !== prevProps.lastInputEmotion && this.props.lastInputEmotion !== "") {
             const killCount = this._killAllEmojis(this.props.lastInputEmotion);
             if (killCount > 0) {
-                this.props.onScorePoints(killCount);
+                this.props.onScorePoints(killCount, "pop");
             }
         }
 
@@ -220,7 +220,7 @@ class SceneLevel extends React.Component {
         const remainingEmojis = this._killAllEmojis("", false, "heavy");
 
         // Score half points for remaining emojis, to be kind to bad players
-        this.props.onScorePoints(Math.floor(remainingEmojis / 2));
+        this.props.onScorePoints(Math.floor(remainingEmojis / 2), "");
 
         if (levelNo === 1) {
             this._generateEmojis(5, true);

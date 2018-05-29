@@ -174,8 +174,17 @@ class WebcamCapture extends React.Component {
 
             case "RecognitionResult":
                 if (packet.faces.length > 1) {
-                    this.props.onMultipleFacesDetected();
+                    // this.props.onMultipleFacesDetected();
                 }
+
+                // Sort by size of face, largest face first
+                packet.faces.sort((a, b) => {
+                    const aw = a.boundingBox[2].x - a.boundingBox[0].x;
+                    const ah = a.boundingBox[2].y - a.boundingBox[0].y;
+                    const bw = b.boundingBox[2].x - b.boundingBox[0].x;
+                    const bh = b.boundingBox[2].y - b.boundingBox[0].y;
+                    return aw * ah - bw * bh;
+                });
 
                 if (packet.faces.length > 0) {
                     // Pick first face, and top emotion detected

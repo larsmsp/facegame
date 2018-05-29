@@ -27,6 +27,7 @@ import SceneWaitingToStart from "./SceneWaitingToStart";
 import ScoreDisplay from "../components/ScoreDisplay";
 import { DateTime } from "luxon";
 import WebcamCapture from "./WebcamCapture";
+import * as SoundService from "../util/SoundService";
 
 const MODE_LOADING = "LOADING";
 const MODE_SCREENSAVER = "SCREENSAVER";
@@ -222,6 +223,7 @@ class Game extends React.Component {
                             startedSmilingAt: DateTime.local(),
                             hasBeenSmilingFor: 0.0
                         });
+                        SoundService.playDetected();
                     } else {
                         const millisecondsSmiling =
                             this.state.hasBeenSmilingFor +
@@ -297,6 +299,8 @@ class Game extends React.Component {
             return;
         }
 
+        SoundService.playLevelup();
+
         // Run after slight timeout
         this._levelCompleteTimer = setTimeout(() => {
             this._levelCompleteTimer = null;
@@ -312,6 +316,12 @@ class Game extends React.Component {
 
     handleStartGame(mugshot) {
         this.refs.particleArea.createExplosion(0, 0, "pop");
+
+        // Sound effects!
+        SoundService.playStartGame();
+        setTimeout(() => {
+            SoundService.playGameMusic();
+        }, 300);
 
         this.setState({
             mode: MODE_PLAYING_LEVEL,
@@ -329,6 +339,12 @@ class Game extends React.Component {
     handleEndGame() {
         // Record highscore
         addNewHighscore(this.state.playerImageUrl, this.state.level.no, this.state.points);
+
+        // Play sound effects
+        SoundService.lowerGameMusic(3000);
+        setTimeout(() => {
+            SoundService.playVictory();
+        }, 700);
 
         // Finish game
         this.setState({
@@ -349,10 +365,14 @@ class Game extends React.Component {
         }, CONGRATS_SCREEN_SHOWN_FOR_SECONDS * 1000);
     }
 
-    handleScorePoints(howMany) {
+    handleScorePoints(howMany, effect = "pop") {
         this.setState({
             points: this.state.points + howMany
         });
+
+        if (effect === "pop") {
+            SoundService.playExplosion();
+        }
     }
 
     ////////////////////////////////////////////////////////////////////////////
