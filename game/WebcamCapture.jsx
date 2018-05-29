@@ -246,7 +246,7 @@ class WebcamCapture extends React.Component {
             return (
                 <div className="status">
                     <p className="good">
-                        Latency &Delta;{(this._initialCaptureInterval() * 0.5 + this.state.latency * 0.5).toFixed()} +{" "}
+                        Latency &Delta;{(this._currentCaptureInterval() * 0.5 + this.state.latency * 0.5).toFixed()} +{" "}
                         {this.state.latency} ms, {this._formatBytesReadable(consumptionByHour)}/h
                     </p>
                 </div>
@@ -452,9 +452,7 @@ class WebcamCapture extends React.Component {
         // Send it over the socket
         this._socket.send(JSON.stringify(msg));
 
-        const rescheduleIn = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;
-        // console.log(`Next capture in ${rescheduleIn} ms`);
-        setTimeout(this._captureAndRecognize.bind(this), rescheduleIn);
+        setTimeout(this._captureAndRecognize.bind(this), this._currentCaptureInterval());
     }
 
     _startWebcameCapture() {
@@ -515,6 +513,12 @@ class WebcamCapture extends React.Component {
 
     _initialCaptureInterval() {
         return parseInt(getSetting(SETTING_STARTING_PICTURE_FREQUENCY), 10);
+    }
+
+    _currentCaptureInterval() {
+        const { idle } = this.props;
+        const captureInterval = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;
+        return idle ? captureInterval * 3.5 : captureInterval;
     }
 
     _captureQuality() {

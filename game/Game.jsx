@@ -450,6 +450,7 @@ class Game extends React.Component {
                         <WebcamCapture
                             ref="camera"
                             debug={debug}
+                            idle={mode === MODE_SCREENSAVER}
                             onInputEmotion={this.handleInputEmotion.bind(this)}
                             onFaceAttributesChanged={this.handleFaceAttributesChanged.bind(this)}
                             onMultipleFacesDetected={this.handleMultipleFaces.bind(this)}
