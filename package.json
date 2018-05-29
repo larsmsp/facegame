@@ -2,6 +2,7 @@
     "bin": "backend.js",
     "name": "EmojiGame",
     "author": "Hampus Nilsson",
+    "license": "GPL-3.0",
     "scripts": {
         "dev": "npm-run-all --parallel dev:*",
         "dev:backend": "node backend.js",
@@ -34,9 +35,6 @@
         ]
     ],
     "pkg": {
-        "assets": [
-            "vision-service-account.json",
-            "out/**/*.*"
-        ]
+        "assets": ["vision-service-account.json", "out/**/*.*"]
     }
 }
