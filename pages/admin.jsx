@@ -10,7 +10,8 @@ import {
     SETTING_CATCHPHRASE,
     SETTING_RECRUITMENT_TEXT,
     SETTING_PICTURE_QUALITY,
-    SETTING_STARTING_PICTURE_FREQUENCY
+    SETTING_STARTING_PICTURE_FREQUENCY,
+    SETTING_BACKEND_SERVER
 } from "../util/Settings.js";
 import { clearHighscores, removeHighscore } from "../util/HighscoreService";
 import HighscoreBoard from "../components/HighscoreBoard";
@@ -84,7 +85,8 @@ class AdminPage extends React.Component {
             catchphraseText: getSetting(SETTING_CATCHPHRASE),
             recruitmentText: getSetting(SETTING_RECRUITMENT_TEXT),
             pictureQuality: getSetting(SETTING_PICTURE_QUALITY),
-            pictureFrequency: getSetting(SETTING_STARTING_PICTURE_FREQUENCY)
+            pictureFrequency: getSetting(SETTING_STARTING_PICTURE_FREQUENCY),
+            backendServer: getSetting(SETTING_BACKEND_SERVER)
         };
 
         enableUniqueIds(this);
@@ -125,6 +127,7 @@ class AdminPage extends React.Component {
             SETTING_STARTING_PICTURE_FREQUENCY,
             Math.max(100, Math.min(5000, parseInt(this.state.pictureFrequency, 10)))
         );
+        setSetting(SETTING_BACKEND_SERVER, this.state.backendServer);
 
         // Do something
         window.location.pathname = "/";
@@ -145,7 +148,14 @@ class AdminPage extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     render() {
-        const { camerasAvailable, catchphraseText, recruitmentText, pictureQuality, pictureFrequency } = this.state;
+        const {
+            camerasAvailable,
+            catchphraseText,
+            recruitmentText,
+            pictureQuality,
+            pictureFrequency,
+            backendServer
+        } = this.state;
         console.log(catchphraseText);
         return (
             <WebApp>
@@ -213,6 +223,21 @@ class AdminPage extends React.Component {
                             id={this.lastUniqueId()}
                             name="pictureFrequency"
                             value={pictureFrequency}
+                            onChange={this.handleInputChanged.bind(this)}
+                        />
+                    </div>
+
+                    <div className="control-group">
+                        <label htmlFor={this.nextUniqueId()}>Backend server</label>
+                        <div className="help">
+                            http://localhost:4001 is the default, change to connect to another server for image
+                            recognition
+                        </div>
+                        <input
+                            type="text"
+                            id={this.lastUniqueId()}
+                            name="backendServer"
+                            value={backendServer}
                             onChange={this.handleInputChanged.bind(this)}
                         />
                     </div>

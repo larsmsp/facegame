@@ -5,7 +5,12 @@ import css from "styled-jsx/css";
 import { DateTime } from "luxon";
 import { ALL_EMOTIONS, EMOTION_CONTENT } from ".";
 import uuidv4 from "uuid/v4";
-import { getSetting, SETTING_PICTURE_QUALITY, SETTING_STARTING_PICTURE_FREQUENCY } from "../util/Settings.js";
+import {
+    getSetting,
+    SETTING_PICTURE_QUALITY,
+    SETTING_STARTING_PICTURE_FREQUENCY,
+    SETTING_BACKEND_SERVER
+} from "../util/Settings.js";
 
 const _DefaultState = {
     socketReady: false,
@@ -379,7 +384,7 @@ class WebcamCapture extends React.Component {
 
     _startWebsocketConnection() {
         try {
-            const socket = new WebSocket("ws://" + document.location.hostname + ":4001/", "face");
+            const socket = new WebSocket(getSetting(SETTING_BACKEND_SERVER), "face");
 
             // Connection error
             socket.addEventListener("error", event => {
