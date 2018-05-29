@@ -26,8 +26,8 @@ const CSS = css`
     }
 
     .avatar {
-        width: 17vh;
-        height: 17vh;
+        width: 16vh;
+        height: 16vh;
     }
 
     .level,
