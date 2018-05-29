@@ -222,22 +222,23 @@ class SceneLevel extends React.Component {
         // Score half points for remaining emojis, to be kind to bad players
         this.props.onScorePoints(Math.floor(remainingEmojis / 2), "");
 
+        // First to levels have less different emoji
         if (levelNo === 1) {
-            this._generateEmojis(5, true);
+            this._generateEmojis(5, [EMOTION_HAPPY, EMOTION_CONTENT, EMOTION_SUPRISED]);
         } else if (levelNo === 2) {
-            this._generateEmojis(11, true);
+            this._generateEmojis(11, [EMOTION_HAPPY, EMOTION_CONTENT, EMOTION_SUPRISED, EMOTION_SAD]);
         } else if (levelNo === 3) {
-            this._generateEmojis(18 + Math.floor(Math.random() * 5), true);
+            this._generateEmojis(18 + Math.floor(Math.random() * 5));
         } else if (levelNo === 4) {
-            this._generateEmojis(30, true);
+            this._generateEmojis(30);
         } else if (levelNo === 5) {
-            this._generateEmojis(30, true);
+            this._generateEmojis(30);
         } else if (levelNo === 6) {
-            this._generateEmojis(35 + Math.floor(Math.random() * 10), true);
+            this._generateEmojis(35 + Math.floor(Math.random() * 10));
         } else if (levelNo === 7) {
-            this._generateEmojis(40 + Math.floor(Math.random() * 10), true);
+            this._generateEmojis(40 + Math.floor(Math.random() * 10));
         } else {
-            this._generateEmojis(40 + Math.floor(Math.random() * 15), true);
+            this._generateEmojis(40 + Math.floor(Math.random() * 15));
         }
 
         this.setState({
@@ -248,21 +249,17 @@ class SceneLevel extends React.Component {
         this._startAnimating();
     }
 
-    _generateEmojis(count, clearBoard = false) {
-        let emojis = clearBoard ? [] : [...this.state.emojis];
+    _generateEmojis(count, fromEmotions = ALL_EMOTIONS) {
+        let emojis = [];
         for (var i = 0; i < count; ++i) {
-            emojis.push(this._newEmoji());
+            emojis.push({
+                emotion: this._randomEmotion(fromEmotions)
+            });
         }
 
         this.setState({
             emojis: emojis
         });
-    }
-
-    _newEmoji() {
-        return {
-            emotion: this._randomEmotion()
-        };
     }
 
     _killAllEmojis(emotionToKill = "", shouldGivePoints = true, particleEffect = "pop") {
@@ -302,8 +299,8 @@ class SceneLevel extends React.Component {
         };
     }
 
-    _randomEmotion() {
-        return ALL_EMOTIONS[Math.floor(Math.random() * ALL_EMOTIONS.length)];
+    _randomEmotion(fromEmotions = ALL_EMOTIONS) {
+        return fromEmotions[Math.floor(Math.random() * fromEmotions.length)];
     }
 }
 

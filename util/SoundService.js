@@ -4,6 +4,12 @@ const _gameMusic = new Howl({
     src: ["/static/audio/music.m4a"]
 });
 
+const _menuMusic = new Howl({
+    src: ["/static/audio/menu.webm"],
+    volume: 0.3,
+    loop: true
+});
+
 const _powerup = new Howl({
     src: ["/static/audio/Powerup.wav"]
 });
@@ -33,6 +39,15 @@ let _currentMusicId = null;
 export function playGameMusic() {
     _currentMusicId = _gameMusic.play();
     _currentMusicId.fade(0, 0.65, 1000, _currentMusicId);
+}
+
+export function playMenuMusic() {
+    // const id = _menuMusic.play();
+    // _menuMusic.fade(0, 0.3, 3000, id);
+}
+
+export function stopMenuMusic() {
+    // _menuMusic.stop();
 }
 
 export function lowerGameMusic(forMilliseconds) {

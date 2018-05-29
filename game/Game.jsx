@@ -138,6 +138,8 @@ class Game extends React.Component {
         this._gameLoopTimer = setInterval(() => {
             this.handleGameTick();
         }, 200);
+
+        SoundService.playMenuMusic();
     }
 
     componentWillUnmount() {
@@ -319,6 +321,7 @@ class Game extends React.Component {
 
         // Sound effects!
         SoundService.playStartGame();
+        SoundService.stopMenuMusic();
         setTimeout(() => {
             SoundService.playGameMusic();
         }, 300);
@@ -345,6 +348,9 @@ class Game extends React.Component {
         setTimeout(() => {
             SoundService.playVictory();
         }, 700);
+        setTimeout(() => {
+            SoundService.playMenuMusic();
+        }, 20000);
 
         // Finish game
         this.setState({
