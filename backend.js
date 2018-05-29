@@ -4,11 +4,10 @@ const uuidv4 = require("uuid/v4");
 const GoogleVision = require("@google-cloud/vision");
 const Express = require("express");
 const ExpressWs = require("express-ws");
-const Opn = require("Opn");
 
 // Creates a client
 const googleVisionClient = new GoogleVision.ImageAnnotatorClient({
-    keyFilename: "vision-service-account.json"
+    keyFilename: __dirname + "/vision-service-account.json"
 });
 
 const PORT = 4001;
@@ -16,7 +15,7 @@ const PORT = 4001;
 const WebServer = Express();
 
 // Serve the static output
-WebServer.use(Express.static("out"));
+WebServer.use(Express.static(__dirname + "/out"));
 ExpressWs(WebServer);
 
 function googleLikelihoodToNumber(likelyhood) {
@@ -116,7 +115,11 @@ WebServer.ws("/", function connection(socket) {
                         captureTime: packet.captureTime
                     },
                     packet => {
-                        socket.send(JSON.stringify(packet));
+                        socket.send(JSON.stringify(packet), err => {
+                            if (err) {
+                                console.log("Could not send package: " + err);
+                            }
+                        });
                     }
                 );
                 break;
