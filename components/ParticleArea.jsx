@@ -62,6 +62,7 @@ class ParticleArea extends React.Component {
                         right: 0;
                         bottom: 0;
                         top: 0;
+                        cursor: none;
                         z-index: -1;
                     }
                 `}</style>

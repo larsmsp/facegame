@@ -293,7 +293,7 @@ class WebcamCapture extends React.Component {
 
                 {this.renderStatus()}
 
-                <canvas ref="captureCanvas" style={{ visibility: "hidden" }} />
+                <canvas ref="captureCanvas" style={{ visibility: "hidden", position: "absolute", top: 0 }} />
 
                 {debug ? <DebugControls onInputEmotion={this.handleInputEmotion.bind(this)} /> : null}
             </div>

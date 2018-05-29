@@ -15,7 +15,7 @@ function _getAllHighscores() {
 export function getTopHighscoresWithImages(howMany = 10) {
     const all = _getAllHighscores();
 
-    all.sort((a, b) => a.points < b.points);
+    all.sort((a, b) => b.points - a.points);
     const top = _.take(all, howMany);
 
     top.forEach(h => {
@@ -37,7 +37,7 @@ export function addNewHighscore(playerImageUrl, levelNo, points) {
 
     // For highscores after #200, start deleting images so we don't fill localStorage (limit is 5MB, each image is 10KB~)
     if (highscoreList.length > 210) {
-        highscoreList.sort((a, b) => a - b);
+        highscoreList.sort((a, b) => b.points - a.points);
         _.slice(highscoreList, 200).forEach(h => {
             window.localStorage.removeItem(HIGHSCORE_IMAGE_PREFIX + h.id);
         });
