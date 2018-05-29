@@ -1,6 +1,4 @@
-API
-===
-
+# API
 
 Client connects to a Websocket on the API server; for example https://computas.appspot.com/faceapi/
 
@@ -71,9 +69,9 @@ from the local camera in a `StartCamera` session.
         }]
     }
 
-* **tag** will be the same string as sent to `RecognizeImage`/`StartCamera`, client uses this to match the captured image to the response.
-* **captureTime** is the time the image was captured by the server (if `StartCamera`) or the time it was received from the client (if `RecognizeImage`).
-* **faces** is an array of dictionaries containing the cropped faces from the image.
+*   **tag** will be the same string as sent to `RecognizeImage`/`StartCamera`, client uses this to match the captured image to the response.
+*   **captureTime** is the time the image was captured by the server (if `StartCamera`) or the time it was received from the client (if `RecognizeImage`).
+*   **faces** is an array of dictionaries containing the cropped faces from the image.
 
 ## RecognitionResult
 
@@ -86,20 +84,38 @@ Server sends this once it has received a response from the cloud.
         "faces": [{
             "id": "<an id for this face, same as in FaceCrop>",
             "emotion": {
-                "anger": 0.575,
-                "happiness": 0.394,
-                "neutral": 0.013,
-                "sadness": 0,
-                "surprise": 0.004
+                "Happy": 0.575,
+                "Sad": 0.394,
+                "Angry": 0.013,
+                "Suprised": 0,
+                "Content": 0.1
             },
+            headwear: 0.0,
+            boundingBox: [
+                {
+                    x: 100,
+                    y: 100
+                },
+                {
+                    x: 300,
+                    y: 100
+                },
+                {
+                    x: 300,
+                    y: 300
+                },
+                {
+                    x: 100,
+                    y: 300
+                }
+            ]
             "faceAttributes": {
                 // Raw response data from the cloud
             }
         }]
     }
 
-* **tag** will be the same string as sent to `RecognizeImage`/`StartCamera`, client uses this to match the captured image to the response.
-* **captureTime** is the time the image was captured by the server (if `StartCamera`) or the time it was received from the client (if `RecognizeImage`).
-* **faces** is an array of dictionaries containing information about the recognized faces. Client uses the emotion array to figure out the primary emotion.
-* **faceAttributes** Is a raw dictionary with the from the cloud API. It's content is dependant on if Azure or Google is used.
-
+*   **tag** will be the same string as sent to `RecognizeImage`/`StartCamera`, client uses this to match the captured image to the response.
+*   **captureTime** is the time the image was captured by the server (if `StartCamera`) or the time it was received from the client (if `RecognizeImage`).
+*   **faces** is an array of dictionaries containing information about the recognized faces. Client uses the emotion array to figure out the primary emotion.
+*   **faceAttributes** Is a raw dictionary with the from the cloud API. It's content is dependant on if Azure or Google is used.
