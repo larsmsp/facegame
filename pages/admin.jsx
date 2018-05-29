@@ -186,7 +186,7 @@ class AdminPage extends React.Component {
 
                     <div className="control-group">
                         <label htmlFor={this.nextUniqueId()}>Hiring text</label>
-                        <div className="help">(shown under Computas + Google cloud text)</div>
+                        <div className="help">Shown under Computas + Google cloud text</div>
                         <input
                             type="text"
                             id={this.lastUniqueId()}
@@ -230,7 +230,7 @@ class AdminPage extends React.Component {
                     <div className="control-group">
                         <label htmlFor={this.nextUniqueId()}>Backend server</label>
                         <div className="help">
-                            http://localhost:4001 is the default, change to connect to another server for image
+                            ws://localhost:4001 is the default, change to connect to another server for image
                             recognition
                         </div>
                         <input
