@@ -437,7 +437,7 @@ class WebcamCapture extends React.Component {
         this._socket.send(JSON.stringify(msg));
 
         const rescheduleIn = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;
-        console.log(`Next capture in ${rescheduleIn} ms`);
+        // console.log(`Next capture in ${rescheduleIn} ms`);
         setTimeout(this._captureAndRecognize.bind(this), rescheduleIn);
     }
 

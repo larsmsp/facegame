@@ -5,6 +5,10 @@ const HIGHSCORE_KEY = "highscore-list";
 const HIGHSCORE_IMAGE_PREFIX = "highscore-img-";
 
 function _getAllHighscores() {
+    if (!process.browser) {
+        return [];
+    }
+
     return JSON.parse(window.localStorage.getItem(HIGHSCORE_KEY) || "[]");
 }
 
@@ -38,7 +42,7 @@ export function addNewHighscore(playerImageUrl, levelNo, points) {
 
 export function removeHighscore(id) {
     const highscores = _getAllHighscores();
-    const newHighscoreLsit = _.filter(highscores, x => x.id === id);
+    const newHighscoreLsit = _.filter(highscores, x => x.id !== id);
     window.localStorage.removeItem(HIGHSCORE_IMAGE_PREFIX + id);
     window.localStorage.setItem(HIGHSCORE_KEY, JSON.stringify(newHighscoreLsit));
 }

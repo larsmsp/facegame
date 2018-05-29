@@ -12,6 +12,8 @@ import {
     SETTING_PICTURE_QUALITY,
     SETTING_STARTING_PICTURE_FREQUENCY
 } from "../util/Settings.js";
+import { clearHighscores, removeHighscore } from "../util/HighscoreService";
+import HighscoreBoard from "../components/HighscoreBoard";
 
 const _DefaultState = {
     camerasAvailable: []
@@ -128,9 +130,13 @@ class AdminPage extends React.Component {
         window.location.pathname = "/";
     }
 
-    handleDeleteHighscores(event) {
+    handleRemoveHighscore(id) {
+        removeHighscore(id);
+    }
+
+    handleDeleteAllHighscores(event) {
         if (confirm("Delete highscores? This cannot be undone")) {
-            // Do it!
+            clearHighscores();
         }
     }
 
@@ -215,11 +221,13 @@ class AdminPage extends React.Component {
                         <button className="save-button" onClick={this.handleSave.bind(this)}>
                             Save and return to main screen
                         </button>
-                        <button className="delete-button" onClick={this.handleDeleteHighscores.bind(this)}>
+                        <button className="delete-button" onClick={this.handleDeleteAllHighscores.bind(this)}>
                             Delete all highscores
                         </button>
                     </div>
                 </div>
+
+                <HighscoreBoard onDeleteHighscore={id => this.handleRemoveHighscore(id)} />
             </WebApp>
         );
     }

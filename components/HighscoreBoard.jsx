@@ -53,6 +53,15 @@ const CSS = css`
         text-align: left;
     }
 
+    .delete-button {
+        position: absolute;
+        z-index: 16;
+        right: 1vh;
+        top: 1vh;
+        background-color: red;
+        color: white;
+    }
+
     strong {
         font-size: 3vh;
     }
@@ -64,9 +73,7 @@ class HighscoreBoard extends React.Component {
     ////////////////////////////////////////////////////////////////////////////
 
     componentWillMount() {
-        this.setState({
-            highscoreList: getTopHighscoresWithImages(5)
-        });
+        this._updateScoreboard();
     }
 
     ////////////////////////////////////////////////////////////////////////////
@@ -94,6 +101,19 @@ class HighscoreBoard extends React.Component {
                                     <span className="points">
                                         <strong>{h.points + " "}</strong>points
                                     </span>
+
+                                    {this.props.onDeleteHighscore ? (
+                                        <button
+                                            className="delete-button"
+                                            onClick={() => {
+                                                this.props.onDeleteHighscore(h.id);
+                                                // Really should have some better store sync here
+                                                this._updateScoreboard();
+                                            }}
+                                        >
+                                            Delete
+                                        </button>
+                                    ) : null}
                                 </li>
                             ))}
                         </ul>
@@ -101,6 +121,16 @@ class HighscoreBoard extends React.Component {
                 ) : null}
             </section>
         );
+    }
+
+    ////////////////////////////////////////////////////////////////////////////
+    // Private methods
+    ////////////////////////////////////////////////////////////////////////////
+
+    _updateScoreboard() {
+        this.setState({
+            highscoreList: getTopHighscoresWithImages(5)
+        });
     }
 }
 
