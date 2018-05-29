@@ -1,8 +1,10 @@
-const WebSocket = require("ws");
 const fs = require("fs");
 const imageDataURI = require("image-data-uri");
 const uuidv4 = require("uuid/v4");
 const GoogleVision = require("@google-cloud/vision");
+const Express = require("express");
+const ExpressWs = require("express-ws");
+const Opn = require("Opn");
 
 // Creates a client
 const googleVisionClient = new GoogleVision.ImageAnnotatorClient({
@@ -11,29 +13,11 @@ const googleVisionClient = new GoogleVision.ImageAnnotatorClient({
 
 const PORT = 4001;
 
-const wss = new WebSocket.Server({
-    port: PORT,
-    perMessageDeflate: {
-        zlibDeflateOptions: {
-            // See zlib defaults.
-            chunkSize: 1024,
-            memLevel: 7,
-            level: 3
-        },
-        zlibInflateOptions: {
-            chunkSize: 10 * 1024
-        },
-        // Other options settable:
-        clientNoContextTakeover: true, // Defaults to negotiated value.
-        serverNoContextTakeover: true, // Defaults to negotiated value.
-        clientMaxWindowBits: 10, // Defaults to negotiated value.
-        serverMaxWindowBits: 10, // Defaults to negotiated value.
-        // Below options specified as default values.
-        concurrencyLimit: 10, // Limits zlib concurrency for perf.
-        threshold: 1024 // Size (in bytes) below which messages
-        // should not be compressed.
-    }
-});
+const WebServer = Express();
+
+// Serve the static output
+WebServer.use(Express.static("out"));
+ExpressWs(WebServer);
 
 function googleLikelihoodToNumber(likelyhood) {
     switch (likelyhood) {
@@ -115,7 +99,7 @@ function performFaceDetection(request, sendPacket) {
         });
 }
 
-wss.on("connection", function connection(socket) {
+WebServer.ws("/", function connection(socket) {
     socket.on("message", function incoming(message) {
         const packet = JSON.parse(message);
 
@@ -149,4 +133,14 @@ wss.on("connection", function connection(socket) {
     );
 });
 
-console.log(`Server listening on port ${PORT}`);
+WebServer.listen(PORT, () => {
+    console.log(`http/ws server listening on ${PORT}`);
+});
+
+if (process.pkg) {
+    console.log(`
+    
+    >>> OPEN THIS URL TO START THE GAME: http://localhost:${PORT}/ <<<
+    
+    `);
+}
