@@ -11,7 +11,9 @@ import {
     SETTING_RECRUITMENT_TEXT,
     SETTING_PICTURE_QUALITY,
     SETTING_STARTING_PICTURE_FREQUENCY,
-    SETTING_BACKEND_SERVER
+    SETTING_BACKEND_SERVER,
+    SETTING_NET_DETECTION_CALLS,
+    SETTING_NET_UPLOADED_BYTES
 } from "../util/Settings.js";
 import { clearHighscores, removeHighscore } from "../util/HighscoreService";
 import HighscoreBoard from "../components/HighscoreBoard";
@@ -219,7 +221,7 @@ class AdminPage extends React.Component {
                         <label htmlFor={this.nextUniqueId()}>Picture frequency in milliseconds:</label>
                         <div className="help">
                             How often to capture pictures, lower delay improves responsiveness of game, but requires
-                            more network traffic.
+                            more network traffic. Default is 1000.
                         </div>
 
                         <input
@@ -248,12 +250,17 @@ class AdminPage extends React.Component {
 
                     <div className="control-group">
                         <label htmlFor={this.nextUniqueId()}>Total Cloud Vision API calls used:</label>
-                        <input type="text" readonly id={this.lastUniqueId()} value={totalApiCalls} />
+                        <input
+                            type="text"
+                            readOnly
+                            id={this.lastUniqueId()}
+                            value={totalApiCalls + " / $" + (Math.max(totalApiCalls - 1000, 0) / 1000 * 1.5).toFixed(2)}
+                        />
                     </div>
 
                     <div className="control-group">
                         <label htmlFor={this.nextUniqueId()}>Total data traffic to server:</label>
-                        <input type="text" readonly id={this.lastUniqueId()} value={totalNetUseMb.toFixed(0) + " MB"} />
+                        <input type="text" readOnly id={this.lastUniqueId()} value={totalNetUseMb.toFixed(0) + " MB"} />
                     </div>
 
                     <div className="">
