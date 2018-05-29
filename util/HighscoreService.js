@@ -19,7 +19,7 @@ export function getTopHighscoresWithImages(howMany = 10) {
     const top = _.take(all, howMany);
 
     top.forEach(h => {
-        h.playerImageUrl = window.localStorage.getItem(HIGHSCORE_IMAGE_PREFIX + h.id);
+        h.playerImageUrl = window.localStorage.getItem(HIGHSCORE_IMAGE_PREFIX + h.id) || "";
     });
 
     return top;
@@ -34,6 +34,14 @@ export function addNewHighscore(playerImageUrl, levelNo, points) {
     };
 
     highscoreList.push(newHighscore);
+
+    // For highscores after #200, start deleting images so we don't fill localStorage (limit is 5MB, each image is 10KB~)
+    if (highscoreList.length > 210) {
+        highscoreList.sort((a, b) => a - b);
+        _.slice(highscoreList, 200).forEach(h => {
+            window.localStorage.removeItem(HIGHSCORE_IMAGE_PREFIX + h.id);
+        });
+    }
 
     // TODO: Downsize?
     window.localStorage.setItem(HIGHSCORE_IMAGE_PREFIX + newHighscore.id, playerImageUrl);
