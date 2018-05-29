@@ -65,7 +65,7 @@ class HighscoreBoard extends React.Component {
 
     componentWillMount() {
         this.setState({
-            highscoreList: getTopHighscoresWithImages()
+            highscoreList: getTopHighscoresWithImages(5)
         });
     }
 
@@ -81,20 +81,24 @@ class HighscoreBoard extends React.Component {
             <section className="highscore-board">
                 <style jsx>{CSS}</style>
 
-                <h2>Highscores</h2>
-                <ul>
-                    {highscoreList.map(h => (
-                        <li key={h.id}>
-                            <img className="avatar" src={h.playerImageUrl} />
-                            <span className="level">
-                                level<strong>{" " + h.levelNo}</strong>
-                            </span>
-                            <span className="points">
-                                <strong>{h.points + " "}</strong>points
-                            </span>
-                        </li>
-                    ))}
-                </ul>
+                {highscoreList.length > 0 ? (
+                    <React.Fragment>
+                        <h2>Highscore</h2>
+                        <ul>
+                            {highscoreList.map(h => (
+                                <li key={h.id}>
+                                    <img className="avatar" src={h.playerImageUrl} />
+                                    <span className="level">
+                                        level<strong>{" " + h.levelNo}</strong>
+                                    </span>
+                                    <span className="points">
+                                        <strong>{h.points + " "}</strong>points
+                                    </span>
+                                </li>
+                            ))}
+                        </ul>
+                    </React.Fragment>
+                ) : null}
             </section>
         );
     }

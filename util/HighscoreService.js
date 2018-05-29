@@ -8,11 +8,11 @@ function _getAllHighscores() {
     return JSON.parse(window.localStorage.getItem(HIGHSCORE_KEY) || "[]");
 }
 
-export function getTopHighscoresWithImages() {
+export function getTopHighscoresWithImages(howMany = 10) {
     const all = _getAllHighscores();
 
     all.sort((a, b) => a.points < b.points);
-    const top = _.take(all, 10);
+    const top = _.take(all, howMany);
 
     top.forEach(h => {
         h.playerImageUrl = window.localStorage.getItem(HIGHSCORE_IMAGE_PREFIX + h.id);
