@@ -7,9 +7,11 @@ import { ALL_EMOTIONS, EMOTION_CONTENT } from ".";
 import uuidv4 from "uuid/v4";
 import {
     getSetting,
+    setSetting,
     SETTING_PICTURE_QUALITY,
     SETTING_STARTING_PICTURE_FREQUENCY,
-    SETTING_BACKEND_SERVER
+    SETTING_BACKEND_SERVER,
+    SETTING_NET_DETECTION_CALLS
 } from "../util/Settings.js";
 
 const _DefaultState = {
@@ -439,6 +441,14 @@ class WebcamCapture extends React.Component {
             totalImageSize: this.state.totalImageSize + msg.imageBase64.length
         });
 
+        // Record total API usage
+        setSetting(SETTING_NET_DETECTION_CALLS, parseInt(getSetting(SETTING_NET_DETECTION_CALLS), 10) + 1);
+        setSetting(
+            SETTING_NET_UPLOADED_BYTES,
+            parseInt(getSetting(SETTING_NET_UPLOADED_BYTES), 10) + msg.imageBase64.length
+        );
+
+        // Send it over the socket
         this._socket.send(JSON.stringify(msg));
 
         const rescheduleIn = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;

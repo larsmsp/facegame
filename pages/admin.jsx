@@ -86,7 +86,9 @@ class AdminPage extends React.Component {
             recruitmentText: getSetting(SETTING_RECRUITMENT_TEXT),
             pictureQuality: getSetting(SETTING_PICTURE_QUALITY),
             pictureFrequency: getSetting(SETTING_STARTING_PICTURE_FREQUENCY),
-            backendServer: getSetting(SETTING_BACKEND_SERVER)
+            backendServer: getSetting(SETTING_BACKEND_SERVER),
+            totalApiCalls: getSetting(SETTING_NET_DETECTION_CALLS),
+            totalNetUseMb: parseInt(getSetting(SETTING_NET_UPLOADED_BYTES), 10) / 1024 / 1024
         };
 
         enableUniqueIds(this);
@@ -154,7 +156,9 @@ class AdminPage extends React.Component {
             recruitmentText,
             pictureQuality,
             pictureFrequency,
-            backendServer
+            backendServer,
+            totalApiCalls,
+            totalNetUseMb
         } = this.state;
         console.log(catchphraseText);
         return (
@@ -165,7 +169,7 @@ class AdminPage extends React.Component {
                     <h1>Administration of the Emoji Game</h1>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>Catchphrase on screensaver</label>
+                        <label htmlFor={this.nextUniqueId()}>Catchphrase on screensaver:</label>
                         <input
                             type="text"
                             id={this.lastUniqueId()}
@@ -176,7 +180,7 @@ class AdminPage extends React.Component {
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>What camera should be used?</label>
+                        <label htmlFor={this.nextUniqueId()}>Camera to use:</label>
                         <select>
                             {Object.values(camerasAvailable).map((deviceName, idx) => (
                                 <option key={idx}>{deviceName}</option>
@@ -185,7 +189,7 @@ class AdminPage extends React.Component {
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>Hiring text</label>
+                        <label htmlFor={this.nextUniqueId()}>Hiring text:</label>
                         <div className="help">Shown under Computas + Google cloud text</div>
                         <input
                             type="text"
@@ -197,7 +201,7 @@ class AdminPage extends React.Component {
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>Picture quality (between 10 and 90)</label>
+                        <label htmlFor={this.nextUniqueId()}>Picture quality (between 10 and 90):</label>
                         <div className="help">
                             Higher value improves accuracy of the game, but requires more network, default is 75 (good
                             mix between accuracy and bandwidth). Use a lower value if the network is bad.
@@ -212,7 +216,7 @@ class AdminPage extends React.Component {
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>Picture frequency in milliseconds</label>
+                        <label htmlFor={this.nextUniqueId()}>Picture frequency in milliseconds:</label>
                         <div className="help">
                             How often to capture pictures, lower delay improves responsiveness of game, but requires
                             more network traffic.
@@ -228,7 +232,7 @@ class AdminPage extends React.Component {
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>Backend server</label>
+                        <label htmlFor={this.nextUniqueId()}>Backend server URL:</label>
                         <div className="help">
                             ws://localhost:4001 is the default, change to connect to another server for image
                             recognition
@@ -242,10 +246,21 @@ class AdminPage extends React.Component {
                         />
                     </div>
 
+                    <div className="control-group">
+                        <label htmlFor={this.nextUniqueId()}>Total Cloud Vision API calls used:</label>
+                        <input type="text" readonly id={this.lastUniqueId()} value={totalApiCalls} />
+                    </div>
+
+                    <div className="control-group">
+                        <label htmlFor={this.nextUniqueId()}>Total data traffic to server:</label>
+                        <input type="text" readonly id={this.lastUniqueId()} value={totalNetUseMb.toFixed(0) + " MB"} />
+                    </div>
+
                     <div className="">
                         <button className="save-button" onClick={this.handleSave.bind(this)}>
                             Save and return to main screen
                         </button>
+
                         <button className="delete-button" onClick={this.handleDeleteAllHighscores.bind(this)}>
                             Delete all highscores
                         </button>
