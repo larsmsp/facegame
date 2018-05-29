@@ -1,3 +1,4 @@
+import HighscoreBoard from "../components/HighscoreBoard";
 import ParticleArea from "../components/ParticleArea";
 import { FaceProvider } from "../components/FaceAttributes";
 import Emoji from "../components/Emoji";
@@ -21,6 +22,7 @@ import {
 import SceneFinished from "./SceneFinished";
 import SceneLevel from "./SceneLevel";
 import SceneScreensaver from "./SceneScreensaver";
+import { addNewHighscore } from "../util/HighscoreService";
 import SceneWaitingToStart from "./SceneWaitingToStart";
 import ScoreDisplay from "../components/ScoreDisplay";
 import { DateTime } from "luxon";
@@ -326,7 +328,7 @@ class Game extends React.Component {
 
     handleEndGame() {
         // Record highscore
-        // Highscore.recordHighscore(this.state.playerImageUrl, this.state.level.no, this.state.points);
+        addNewHighscore(this.state.playerImageUrl, this.state.level.no, this.state.points);
 
         // Finish game
         this.setState({
@@ -436,6 +438,8 @@ class Game extends React.Component {
 
                     <div className="game">
                         {particlesReady ? <ParticleArea ref="particleArea" effect={backgroundEffect} /> : null}
+
+                        {mode === MODE_WAITING_TO_START || mode === MODE_FINISHED ? <HighscoreBoard /> : null}
 
                         {main}
 

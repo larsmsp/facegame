@@ -16,8 +16,7 @@ const CSS = css`
     }
 
     img {
-        width: 30vw;
-        min-height: 10vh;
+        max-height: 20vh;
     }
 `;
 
