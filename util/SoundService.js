@@ -23,7 +23,8 @@ const _levelup = new Howl({
 });
 
 const _detected = new Howl({
-    src: ["/static/audio/Detected.wav"]
+    src: ["/static/audio/Detected.wav"],
+    volume: 0.25
 });
 
 const _explosions = [

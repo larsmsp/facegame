@@ -30,7 +30,7 @@ const _DefaultState = {
     lastInputAt: null
 };
 
-const HEADWEAR_DETECTION_THRESHOLD = 0.12;
+const HEADWEAR_DETECTION_THRESHOLD = 0.75;
 const IDLE_TIMEOUT = 0;
 
 const CSS = css`
@@ -183,7 +183,7 @@ class WebcamCapture extends React.Component {
                     const ah = a.boundingBox[2].y - a.boundingBox[0].y;
                     const bw = b.boundingBox[2].x - b.boundingBox[0].x;
                     const bh = b.boundingBox[2].y - b.boundingBox[0].y;
-                    return aw * ah - bw * bh;
+                    return bw * bh - aw * ah;
                 });
 
                 if (packet.faces.length > 0) {
@@ -255,8 +255,8 @@ class WebcamCapture extends React.Component {
             return (
                 <div className="status">
                     <p className="good">
-                        Latency &Delta;{(this._currentCaptureInterval() * 0.5 + this.state.latency * 0.5).toFixed()} +{" "}
-                        {this.state.latency} ms, {this._formatBytesReadable(consumptionByHour)}/h
+                        Latency &Delta;{this._currentCaptureInterval().toFixed()} + {this.state.latency} ms,{" "}
+                        {this._formatBytesReadable(consumptionByHour)}/h
                     </p>
                 </div>
             );
@@ -485,28 +485,29 @@ class WebcamCapture extends React.Component {
         };
 
         // TODO: Allow selection of input device
+        let deviceIdToUse = "";
         navigator.mediaDevices.enumerateDevices().then(function(devices) {
             devices.forEach(function(device) {
                 if (device.kind === "videoinput") {
                     console.log(device.label + " id = " + device.deviceId);
-                }
-            });
-        });
-
-        navigator.getUserMedia(
-            {
-                video: {
-                    mandatory: {
-                        minWidth: 1280,
-                        minHeight: 720
+                    if (!deviceIdToUse) {
+                        deviceIdToUse = device.deviceId;
                     }
                 }
-            },
-            _startWebcam,
-            error => {
-                alert("You must grant video access for the game to work.\n\n" + error.code);
-            }
-        );
+            });
+
+            navigator.getUserMedia(
+                {
+                    video: {
+                        deviceId: deviceIdToUse
+                    }
+                },
+                _startWebcam,
+                error => {
+                    alert("You must grant video access for the game to work.\n\n" + error.code);
+                }
+            );
+        });
     }
 
     _formatBytesReadable(bytes) {
@@ -526,7 +527,15 @@ class WebcamCapture extends React.Component {
 
     _currentCaptureInterval() {
         const { idle } = this.props;
-        const captureInterval = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;
+
+        // Latency is 0 before we have detected any face
+        let captureInterval = 0;
+        if (this.state.latency > 0) {
+            captureInterval = this.state.latency * 0.5 + this._initialCaptureInterval() * 0.5;
+        } else {
+            captureInterval = this._initialCaptureInterval();
+        }
+
         return idle ? captureInterval * 3.5 : captureInterval;
     }
 
