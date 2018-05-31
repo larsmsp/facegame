@@ -12,7 +12,8 @@ import {
     SETTING_STARTING_PICTURE_FREQUENCY,
     SETTING_BACKEND_SERVER,
     SETTING_NET_DETECTION_CALLS,
-    SETTING_NET_UPLOADED_BYTES
+    SETTING_NET_UPLOADED_BYTES,
+    SETTING_CAMERA_DEVICE_ID
 } from "../util/Settings.js";
 
 const _DefaultState = {
@@ -485,28 +486,43 @@ class WebcamCapture extends React.Component {
         };
 
         // TODO: Allow selection of input device
-        let deviceIdToUse = "";
         navigator.mediaDevices.enumerateDevices().then(function(devices) {
+            let deviceIdToUse = "";
+
+            // Check that the selected camera from settings is connected
             devices.forEach(function(device) {
                 if (device.kind === "videoinput") {
-                    console.log(device.label + " id = " + device.deviceId);
-                    if (!deviceIdToUse) {
+                    if (getSetting(SETTING_CAMERA_DEVICE_ID) === device.deviceId) {
                         deviceIdToUse = device.deviceId;
                     }
                 }
             });
 
-            navigator.getUserMedia(
-                {
+            // If not connected, make a default query
+            let cameraOptions;
+            if (deviceIdToUse !== "") {
+                cameraOptions = {
                     video: {
-                        deviceId: deviceIdToUse
+                        deviceId: deviceIdToUse,
+                        minWidth: 1280,
+                        minHeight: 720
                     }
-                },
-                _startWebcam,
-                error => {
-                    alert("You must grant video access for the game to work.\n\n" + error.code);
-                }
-            );
+                };
+            } else {
+                cameraOptions = {
+                    video: {
+                        mandatory: {
+                            minWidth: 1280,
+                            minHeight: 720
+                        }
+                    }
+                };
+            }
+
+            // Start the capture
+            navigator.getUserMedia(cameraOptions, _startWebcam, error => {
+                alert("You must grant video access for the game to work.\n\n" + error.code);
+            });
         });
     }
 

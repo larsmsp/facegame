@@ -4,11 +4,11 @@ const _gameMusic = new Howl({
     src: ["/static/audio/music.m4a"]
 });
 
-const _menuMusic = new Howl({
-    src: ["/static/audio/menu.webm"],
-    volume: 0.3,
-    loop: true
-});
+// const _menuMusic = new Howl({
+//     src: ["/static/audio/menu.webm"],
+//     volume: 0.3,
+//     loop: true
+// });
 
 const _powerup = new Howl({
     src: ["/static/audio/Powerup.wav"]

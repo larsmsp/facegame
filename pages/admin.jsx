@@ -18,10 +18,6 @@ import {
 import { clearHighscores, removeHighscore } from "../util/HighscoreService";
 import HighscoreBoard from "../components/HighscoreBoard";
 
-const _DefaultState = {
-    camerasAvailable: []
-};
-
 const CSS = css`
     div {
         color: white;
@@ -54,7 +50,17 @@ const CSS = css`
     select,
     input {
         display: block;
+        border-radius: 0;
+    }
+
+    input {
         height: 22px;
+    }
+
+    select {
+        height: 30px;
+        -webkit-appearance: none;
+        padding: 3px;
     }
 
     button {
@@ -83,10 +89,11 @@ class AdminPage extends React.Component {
         super();
 
         this.state = {
-            ..._DefaultState,
+            camerasAvailable: [],
             catchphraseText: getSetting(SETTING_CATCHPHRASE),
             recruitmentText: getSetting(SETTING_RECRUITMENT_TEXT),
             pictureQuality: getSetting(SETTING_PICTURE_QUALITY),
+            selectedCamera: getSetting(SETTING_CAMERA_DEVICE_ID),
             pictureFrequency: getSetting(SETTING_STARTING_PICTURE_FREQUENCY),
             backendServer: getSetting(SETTING_BACKEND_SERVER),
             totalApiCalls: getSetting(SETTING_NET_DETECTION_CALLS),
@@ -105,6 +112,15 @@ class AdminPage extends React.Component {
                         cameras[device.deviceId] = device.label;
                     }
                 });
+
+                // If chosen camera is no longer set, reset the setting
+                if (!cameras[this.state.selectedCamera]) {
+                    debugger;
+                    this.setState({
+                        selectedCamera: ""
+                    });
+                }
+
                 this.setState({
                     camerasAvailable: cameras
                 });
@@ -132,6 +148,7 @@ class AdminPage extends React.Component {
             Math.max(100, Math.min(5000, parseInt(this.state.pictureFrequency, 10)))
         );
         setSetting(SETTING_BACKEND_SERVER, this.state.backendServer);
+        setSetting(SETTING_CAMERA_DEVICE_ID, this.state.selectedCamera);
 
         // Do something
         window.location.pathname = "/";
@@ -160,9 +177,10 @@ class AdminPage extends React.Component {
             pictureFrequency,
             backendServer,
             totalApiCalls,
-            totalNetUseMb
+            totalNetUseMb,
+            selectedCamera
         } = this.state;
-        console.log(catchphraseText);
+
         return (
             <WebApp>
                 <style jsx>{CSS}</style>
@@ -182,15 +200,6 @@ class AdminPage extends React.Component {
                     </div>
 
                     <div className="control-group">
-                        <label htmlFor={this.nextUniqueId()}>Camera to use:</label>
-                        <select>
-                            {Object.values(camerasAvailable).map((deviceName, idx) => (
-                                <option key={idx}>{deviceName}</option>
-                            ))}
-                        </select>
-                    </div>
-
-                    <div className="control-group">
                         <label htmlFor={this.nextUniqueId()}>Hiring text:</label>
                         <div className="help">Shown under Computas + Google cloud text</div>
                         <input
@@ -200,6 +209,28 @@ class AdminPage extends React.Component {
                             value={recruitmentText}
                             onChange={this.handleInputChanged.bind(this)}
                         />
+                    </div>
+
+                    <div className="control-group">
+                        <label htmlFor={this.nextUniqueId()}>Camera to use:</label>
+                        <select
+                            id={this.lastUniqueId()}
+                            name="selectedCamera"
+                            onChange={this.handleInputChanged.bind(this)}
+                            value={selectedCamera}
+                        >
+                            <option key={0} value="">
+                                Default camera
+                            </option>
+                            {Object.keys(camerasAvailable).map(deviceId => {
+                                const deviceName = camerasAvailable[deviceId];
+                                return (
+                                    <option key={deviceId} value={deviceId}>
+                                        {deviceName}
+                                    </option>
+                                );
+                            })}
+                        </select>
                     </div>
 
                     <div className="control-group">
@@ -221,7 +252,7 @@ class AdminPage extends React.Component {
                         <label htmlFor={this.nextUniqueId()}>Picture frequency in milliseconds:</label>
                         <div className="help">
                             How often to capture pictures, lower delay improves responsiveness of game, but requires
-                            more network traffic. Default is 1000.
+                            more network traffic / API calls. Default is 750.
                         </div>
 
                         <input
@@ -254,7 +285,14 @@ class AdminPage extends React.Component {
                             type="text"
                             readOnly
                             id={this.lastUniqueId()}
-                            value={totalApiCalls + " / $" + (Math.max(totalApiCalls - 1000, 0) / 1000 * 1.5).toFixed(2)}
+                            value={
+                                totalApiCalls +
+                                " / $" +
+                                (Math.max(totalApiCalls - 1000, 0) / 1000 * 1.5).toFixed(2) +
+                                " / " +
+                                (Math.max(totalApiCalls - 1000, 0) / 1000 * 1.5 * 9).toFixed(2) +
+                                " NOK"
+                            }
                         />
                     </div>
 
