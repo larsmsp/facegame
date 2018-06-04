@@ -2,7 +2,7 @@
 
 To run you need Node and Yarn installed:
 
-Install all packages with `yarn`, then run backend & frontend together with `yarn:dev`:
+Install all packages with `yarn`, then run backend & frontend together with `yarn dev`:
 
     yarn
     yarn dev

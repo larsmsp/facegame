@@ -143,7 +143,13 @@ WebServer.listen(PORT, () => {
 if (process.pkg) {
     console.log(`
     
-    >>> OPEN THIS URL TO START THE GAME: http://localhost:${PORT}/ <<<
+
+    >>> OPEN THIS URL IN CHROME TO START THE GAME: http://localhost:${PORT}/ <<<
+
+    Click the Computas logo in the bottom right corner for admin settings.
+    Or open this URL: http://localhost:${PORT}/admin
+
+    Mirror the display to the external screen. and then fullscreen Chrome.
     
     `);
 }
