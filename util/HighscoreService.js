@@ -62,3 +62,31 @@ export function clearHighscores() {
     });
     window.localStorage.removeItem(HIGHSCORE_KEY + id);
 }
+
+export function drawWinner() {
+    const highscores = _getAllHighscores();
+    highscores.sort((a, b) => b.points - a.points);
+    const tickets = [];
+    for (let i = 0; i < 10; i++) {
+        for (let j = i*10; j <  i*10 + (10 - i); j++) {
+            if (highscores[i]) {
+              tickets[j] = highscores[i];
+            } else {
+                break;
+            }
+        }
+    }
+    if (tickets.length < highscores.length) {
+        for (let i = tickets.length; i < highscores.length; i++) {
+            tickets[i] = highscores[i];
+        }
+    }
+    for (let i = tickets.length; i >= 0; --i) {
+        const randomIndex = Math.floor(Math.random() * i);
+        const temp = tickets[i];
+        tickets[i] = tickets[randomIndex];
+        tickets[randomIndex] = temp;
+    }
+    const winner = tickets[Math.floor(Math.random() * tickets.length)];
+    return {... winner, playerImageUrl: window.localStorage.getItem(HIGHSCORE_IMAGE_PREFIX + winner.id) || ""};
+}
